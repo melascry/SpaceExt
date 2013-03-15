@@ -5,11 +5,7 @@
 	<link rel="stylesheet" type="text/css" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.10/themes/base/jquery-ui.css"/>
 	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
 	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="/SpaceExt-static/js/main.js"></script>
-	<script type="text/javascript" src="/SpaceExt-static/js/utils.js"></script>
-	<script type="text/javascript" src="/SpaceExt-static/js/Game.js"></script>
-	<script type="text/javascript" src="/SpaceExt-static/js/GameObject.js"></script>
-	<script type="text/javascript" src="/SpaceExt-static/js/Ennemy.js"></script>
+	<script type="text/javascript" src="/spaceext-static/js/script.js"></script>
 
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>SpaceExt</title>
