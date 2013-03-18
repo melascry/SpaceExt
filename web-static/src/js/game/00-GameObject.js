@@ -1,29 +1,32 @@
-var GameObject = function(img,width,height)
+var GameObject = function(game,img,width,height)
 {
-	if(typeof(img) == "undefined"){
+	if(typeof(game) == "undefined"){
 		return;
 	}
 	
+	this.game = game;
 	this.img = document.createElement('image');
+
 	this.img.src = img;
 	
-	this.offsetX = width/2;
-	this.offsetY = height/2;
+	this.offsetX = -width/2;
+	this.offsetY = -height/2;
 	
 	this.x = 512;
 	this.y = 300;
 	
-	this.drawX = this.x - this.offsetX;
-	this.drawY = this.y - this.offsetY;
-	
+	this.radius = Math.sqrt(width*width + height*height)/2;
+	this.radiusSquarred = (width  * width + height * height )/ 4;
+	//console.log("creation : " + img + " : " + this.radiusSquarred);
 	this.life = 1;
+	
+	this.exists = true;
+	this.visible = true;
+	this.isUsed = false;
 	
 };
 GameObject.prototype.Update = function(deltaTime)
 {
-	this.drawX = this.x - this.offsetX;
-	this.drawY = this.y - this.offsetY;
-	
 	if(this.life <=0)
 	{
 		this.Die();
@@ -31,7 +34,8 @@ GameObject.prototype.Update = function(deltaTime)
 };
 GameObject.prototype.Draw = function(graphics,deltaTime)
 {
-	graphics.drawImage(this.img,this.drawX,this.drawY);
+	graphics.Check();
+	graphics.drawImage(this.img,this.x + this.offsetX,this.y + this.offsetY);
 };
 
 GameObject.prototype.Die = function()

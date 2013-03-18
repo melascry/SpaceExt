@@ -9,6 +9,21 @@ window.requestAnimFrame = (function() {
 	         };
 })();
 
+
+function Distance(sx,ex,sy,ey)
+{
+	return Math.sqrt(SquarredDistance(sx,ex,sy,ey));
+}
+function SquarredDistance(sx,ex,sy,ey)
+{
+	return square(sx-ex)+square(sy-ey);
+}
+function square(x)
+{
+	return x*x;
+}
+
+
 function encrypt(){
 	var form = document.getElementById("connect-form");
 	form.password.value = Aes.Ctr.encrypt(form.password.value, '09ed931e1782289f8f9a42f837a46fa0', 256);

@@ -9,6 +9,12 @@
 
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>SpaceExt</title>
+	<script>
+		<?php
+			echo 'var WEB_STATIC_URL = "'.WEB_STATIC_URL.'";';
+			echo 'var IMAGE_URL = "'.IMAGE_URL.'";';
+		?>
+	</script>
 </head>
 <body onload="start()">
 	<!-- <div id="screen"> -->

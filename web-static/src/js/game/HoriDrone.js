@@ -1,6 +1,6 @@
-var HoriDrone = function(img,width,height,left)
+var HoriDrone = function(game,img,width,height,left)
 {
-	GameObject.call(this,img,width,height);
+	GameObject.call(this,game,img,width,height);
 	
 	this.x = left?-100:100;
 	this.y = 0;

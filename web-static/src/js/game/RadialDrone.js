@@ -1,6 +1,6 @@
-var RadialDrone = function(img,width,height,distance,startAngle)
+var RadialDrone = function(game,img,width,height,distance,startAngle)
 {
-	GameObject.call(this,img,width,height);
+	GameObject.call(this,game,img,width,height);
 	
 	this.distance = distance;
 	this.radialSpeed = 3;
