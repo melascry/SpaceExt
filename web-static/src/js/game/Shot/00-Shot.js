@@ -1,6 +1,8 @@
-var Shot = function(game,img,width,height)
+var Shot = function(game,img,width,height,damage)
 {
-	GameObject.call(this,game,img,width,height);	
+	GameObject.call(this,game,img,width,height);
+	
+	this.damage = damage;
 }
 
 Shot.prototype = new GameObject();

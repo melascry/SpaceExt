@@ -16,13 +16,12 @@ function Distance(sx,ex,sy,ey)
 }
 function SquarredDistance(sx,ex,sy,ey)
 {
-	return square(sx-ex)+square(sy-ey);
+	return Squarre(sx-ex)+Squarre(sy-ey);
 }
-function square(x)
+function Squarre(x)
 {
 	return x*x;
 }
-
 
 function encrypt(){
 	var form = document.getElementById("connect-form");

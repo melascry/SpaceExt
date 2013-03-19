@@ -3,7 +3,7 @@ var RadialDrone = function(game,img,width,height,distance,startAngle)
 	GameObject.call(this,game,img,width,height);
 	
 	this.distance = distance;
-	this.radialSpeed = 3;
+	this.radialSpeed = 6;
 	
 	this.angle = startAngle;
 	
@@ -20,16 +20,12 @@ RadialDrone.prototype = new GameObject();
 
 RadialDrone.prototype.Update = function(deltaTime)
 {
-	if(this.alive)
-	{
-		this.angle += this.radialSpeed*deltaTime;
-		
-		this.x = Math.cos(this.angle)*this.distance;
-		this.y = Math.sin(this.angle)*this.distance;
-
-		GameObject.prototype.Update.call(this,deltaTime);
-	}
-	else
+	this.angle += this.radialSpeed*deltaTime;
+	
+	this.x = Math.cos(this.angle)*this.distance;
+	this.y = Math.sin(this.angle)*this.distance;
+	
+	if(!this.alive)
 	{
 		this.timerRevive += deltaTime;
 		if(this.timerRevive >= this.TimeToRevive)
@@ -38,6 +34,8 @@ RadialDrone.prototype.Update = function(deltaTime)
 			this.alive = true;
 		}
 	}
+
+	GameObject.prototype.Update.call(this,deltaTime);
 }
 RadialDrone.prototype.Draw = function(graphics,deltaTime)
 {

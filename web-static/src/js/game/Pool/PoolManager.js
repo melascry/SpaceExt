@@ -1,18 +1,35 @@
-var PoolManager = function(game,nbrLittleShip,nbrShot)
+var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 {
 	this.game = game;
 	this.LittleEnnemies = new Array();
+	
 	this.PlayerShoots = new Array();
+	this.DroneShoots = new Array();
+	
 	this.LittleEnnemiesShoots = new Array();
+	this.Ennemies = new Array();
 	
 	for( var i = 0; i < nbrLittleShip; i++)
 	{
 		this.LittleEnnemies[i] = new Ennemy(this.game,IMAGE_URL+"Ennemy.png",21,22);
 	}
-	
+	/*
+	this.GetEnnemy = function(index)
+	{
+		for(var i in this.Ennemy[index])
+		{
+			if(!this.Ennemy[index][i].isUsed)
+			{
+				this.Ennemy[index][i].isUsed = true;
+				return this.Ennemy[index][i];
+			}
+		}
+		
+		this.Ennemy[index][this.Ennemy[index].length] = new Ennemy(this.game,IMAGE_URL+"Ennemy.png",21,22,index);
+	}*/
 	this.GetLittleEnnemy = function()
 	{
-		for(var i in this.LittleEnnemies)
+		for( var i = 0 ; i < this.LittleEnnemies.length; i++)
 		{
 			//console.log("getting ennemy : " + this.LittleEnnemies[i].isUsed);
 			if(!this.LittleEnnemies[i].isUsed)
@@ -23,37 +40,89 @@ var PoolManager = function(game,nbrLittleShip,nbrShot)
 			}
 		}
 		
-		this.LittleEnnemies[this.LittleEnnemies.length] = new Ennemy(this.game,IMAGE_URL+"Ennemy.png",21,22);
+		this.LittleEnnemies[this.LittleEnnemies.length] = new Ennemy(this.game,IMAGE_URL+"Ennemy.png",21,22,EnnemiesIndices.LITTLE);
 		//console.log("created pool entity");
 		this.LittleEnnemies[this.LittleEnnemies.length-1].isUsed = true;
-		console.log("Little length : " + this.LittleEnnemies.length);
+		//console.log("Little length : " + this.LittleEnnemies.length);
 		//console.log("pool entity is used");
 		return this.LittleEnnemies[this.LittleEnnemies.length-1]; 
+	}
+	
+	this.GetDroneShot = function()
+	{
+		for( var i = 0 ; i < this.DroneShoots.length; i++)
+		{
+			if(!this.DroneShoots[i].isUsed)
+			{
+				this.DroneShoots[i].isUsed = true;
+				//console.log("Shot length : " + this.PlayerShoots.length);
+				return this.DroneShoots[i];
+			}
+		}
+		this.DroneShoots[this.DroneShoots.length] = new DroneShot(this.game,IMAGE_URL+"Thing.png",10,10,1)
+		//console.log("created pool entity");
+		this.DroneShoots[this.DroneShoots.length-1].isUsed = true;
+		//console.log("pool entity is used");
+		//console.log("Shot legngth : " + this.PlayerShoots.length);
+		return this.DroneShoots[this.DroneShoots.length-1];
 	}
 	
 	this.GetPlayerShot = function()
 	{
 		for( var i in this.PlayerShoots)
 		{
-			if(!this.PlayerShoots[i].isUsed)
+			var isOk = true;
+			//console.log(this.PlayerShoots[i]);
+			for(var e =0; e < this.PlayerShoots[i].length; e++)
 			{
-				this.PlayerShoots[i].isUsed = true;
-				//console.log("Shot legngth : " + this.PlayerShoots.length);
+				//console.log(this.PlayerShoots[i]);
+				if(this.PlayerShoots[i][e].isUsed)
+				{
+					isOk = false;
+				}
+				//console.log(this.PlayerShoots[i]);
+			}
+
+			
+			if(isOk)
+			{
+				//console.log(this.PlayerShoots[i]);
+				for(var e =0; e < this.PlayerShoots[i].length; e++)
+				{
+					//console.log(e + " : " + this.PlayerShoots[i][e]);
+					this.PlayerShoots[i][e].isUsed = true;
+				}
+				//console.log("Shot length : " + this.PlayerShoots.length);
+				//console.log(this.PlayerShoots[i]);
+				
 				return this.PlayerShoots[i];
 			}
 		}
 		
-		this.PlayerShoots[this.PlayerShoots.length] = new PlayerShot(this.game,IMAGE_URL+"Thing.png",10,10);
-		//console.log("created pool entity");
-		this.PlayerShoots[this.PlayerShoots.length-1].isUsed = true;
-		//console.log("pool entity is used");
-		//console.log("Shot legngth : " + this.PlayerShoots.length);
+		this.PlayerShoots[this.PlayerShoots.length] = new Array();
+		for(var i = 0 ; i < this.game.player.ship.ShootPosition.length ;i++)
+		{
+
+			this.PlayerShoots[this.PlayerShoots.length-1][i] =
+				new PlayerShot(
+								this.game
+								,IMAGE_URL+"Thing.png"
+								,10
+								,10
+								,this.game.player.ship.ShootDamage[i]
+								,this.game.player.ship.ShootDirection[i]
+								);
+			
+			
+			this.PlayerShoots[this.PlayerShoots.length-1][i].isUsed = true;
+		}
+		//console.log(this.PlayerShoots[this.PlayerShoots.length-1]);
 		return this.PlayerShoots[this.PlayerShoots.length-1];
 	}
 	
 	this.GetLittleEnnemiesShot = function()
 	{
-		for( var i in this.LittleEnnemiesShoots)
+		for( var i = 0 ; i < this.LittleEnnemiesShoots.length ; i++)
 		{
 			if(!this.LittleEnnemiesShoots[i].isUsed)
 			{
