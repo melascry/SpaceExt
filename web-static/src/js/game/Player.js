@@ -24,8 +24,8 @@ var Player = function(game,img,width,height,type,fireRate)//Need all the things 
 
 	this.LengthDrones = new Array();
 	
-	this.LengthDrones[0] = new HoriDrone(this.game,"/spaceext-static/img/thing.png",10,10,true,20);
-	this.LengthDrones[1] = new HoriDrone(this.game,"/spaceext-static/img/thing.png",10,10,false,20);
+	//this.LengthDrones[0] = new HoriDrone(this.game,"/spaceext-static/img/thing.png",10,10,true,20);
+	//this.LengthDrones[1] = new HoriDrone(this.game,"/spaceext-static/img/thing.png",10,10,false,20);
 	
 	$(document).keyup(function(e){
 		return _this.onKeyUp(e.which);		
@@ -40,7 +40,7 @@ var Player = function(game,img,width,height,type,fireRate)//Need all the things 
 	this.radiusSquarred = 100;
 	
 	this.droneRadius = this.radius + 80;
-	this.droneRadiusSquarred = Squarre(this.droneRadius);
+	this.droneRadiusSquarred = MathUtils.Squarre(this.droneRadius);
 	
 };
 
@@ -60,7 +60,7 @@ Player.prototype.Update = function(deltaTime)
 			if(this.keyList[32])
 			{
 				var s = pool.GetPlayerShot();
-				console.log(s.length);
+				//console.log(s.length);
 				for(var i in s)
 				{
 					//console.log(s[i]);
@@ -68,7 +68,7 @@ Player.prototype.Update = function(deltaTime)
 					s[i].x = this.x + this.ship.ShootPosition[i][0];
 					s[i].y = this.y + this.ship.ShootPosition[i][1];
 				}
-				console.log(s);
+				//console.log(s);
 				this.canFire = false;
 			}
 		}
@@ -124,13 +124,13 @@ Player.prototype.Update = function(deltaTime)
 		
 		if(this.x <= -this.offsetX)
 			this.x = -this.offsetX;
-		else if(this.x >= 1024+this.offsetX)
-			this.x = 1024+this.offsetX;
+		else if(this.x >= this.game.canvas.width + this.offsetX)
+			this.x = this.game.canvas.width + this.offsetX;
 		
 		if(this.y <= -this.offsetY)
 			this.y = -this.offsetY;
-		else if(this.y >= 600+this.offsetY)
-			this.y = 600+this.offsetY;
+		else if(this.y >= this.game.canvas.height + this.offsetY)
+			this.y = this.game.canvas.height + this.offsetY;
 		
 		for(i in this.drones)
 		{
@@ -146,6 +146,12 @@ Player.prototype.Update = function(deltaTime)
 		GameObject.prototype.Update.call(this,deltaTime);
 	}
 	
+	this.TestPhysique(pool);
+	
+}
+
+Player.prototype.TestPhysique = function(pool)
+{
 	for(var i in pool.PlayerShoots)
 	{
 		if(pool.PlayerShoots[i] != null)
@@ -158,11 +164,19 @@ Player.prototype.Update = function(deltaTime)
 					{
 						if(pool.LittleEnnemies[e].isUsed)
 						{
-							var distance = SquarredDistance(pool.LittleEnnemies[e].x, pool.PlayerShoots[i][j].x, pool.LittleEnnemies[e].y, pool.PlayerShoots[i][j].y);
-							
+							var distance = MathUtils.SquarredDistance(pool.LittleEnnemies[e].x, pool.PlayerShoots[i][j].x, pool.LittleEnnemies[e].y, pool.PlayerShoots[i][j].y);
+							/*
+							if(pool.PlayerShoots[i][j].x < pool.LittleEnnemies[e].x)
+								if(pool.PlayerShoots[i][j].x + pool.PlayerShoots[i][j].width > pool.LittleEnnemies[e].x + pool.LittleEnnemies[e].width)
+									if(pool.PlayerShoots[i][j].y < pool.LittleEnnemies[e].y)
+										if(pool.PlayerShoots[i][j].y + pool.PlayerShoots[i][j].height> pool.LittleEnnemies[e].y + pool.LittleEnnemies[e].height)
+											{
+												pool.LittleEnnemies[e].isUsed = false;
+												pool.PlayerShoots[i][j].isUsed = false;
+											}*/
 							if(distance <= pool.PlayerShoots[i][j].radiusSquarred + pool.LittleEnnemies[e].radiusSquarred)
 							{
-								pool.LittleEnnemies[e].isUsed = false;
+								pool.LittleEnnemies[e].Attacked(pool.PlayerShoots[i][j].damage);
 								pool.PlayerShoots[i][j].isUsed = false;							
 							}
 						}
@@ -172,20 +186,44 @@ Player.prototype.Update = function(deltaTime)
 		}
 	}
 	
+	for(var i in pool.DroneShoots)
+	{
+		if(pool.DroneShoots[i] != null)
+		{
+			if(pool.DroneShoots[i].isUsed)
+			{
+				for ( var e in pool.LittleEnnemies)
+				{
+					if(pool.LittleEnnemies[e].isUsed)
+					{
+						var distance = MathUtils.SquarredDistance(pool.LittleEnnemies[e].x, pool.DroneShoots[i].x, pool.LittleEnnemies[e].y, pool.DroneShoots[i].y);
+						
+						if(distance <= pool.DroneShoots[i].radiusSquarred + pool.LittleEnnemies[e].radiusSquarred)
+						{
+							pool.LittleEnnemies[e].isUsed = false;
+							pool.DroneShoots[i].isUsed = false;							
+						}
+					}
+				}
+			}
+			
+		}
+	}
+	
 	for( var i in pool.LittleEnnemiesShoots)
 	{
 		if(pool.LittleEnnemiesShoots[i] != null)
 		{
 			if( pool.LittleEnnemiesShoots[i].isUsed)
 			{
-				var distance = SquarredDistance(this.x,pool.LittleEnnemiesShoots[i].x,this.y,pool.LittleEnnemiesShoots[i].y);
+				var distance = MathUtils.SquarredDistance(this.x,pool.LittleEnnemiesShoots[i].x,this.y,pool.LittleEnnemiesShoots[i].y);
 				
 				//Test for all drones
 				for(var e in this.drones)
 				{
 					if(distance <= pool.LittleEnnemiesShoots[i].radiusSquarred + this.droneRadiusSquarred + this.drones[e].radiusSquarred)
 					{
-						var distanceD = SquarredDistance(this.drones[e].x+this.x,pool.LittleEnnemiesShoots[i].x,this.drones[e].y+this.y,pool.LittleEnnemiesShoots[i].y);
+						var distanceD = MathUtils.SquarredDistance(this.drones[e].x+this.x,pool.LittleEnnemiesShoots[i].x,this.drones[e].y+this.y,pool.LittleEnnemiesShoots[i].y);
 
 						if(distanceD <= pool.LittleEnnemiesShoots[i].radiusSquarred + this.drones[e].radiusSquarred)
 						{
@@ -203,6 +241,7 @@ Player.prototype.Update = function(deltaTime)
 		}
 	}
 }
+
 Player.prototype.Draw = function(graphics, deltaTime)
 {
 	GameObject.prototype.Draw.call(this,graphics,deltaTime);

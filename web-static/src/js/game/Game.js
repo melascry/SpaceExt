@@ -11,23 +11,51 @@ var Game = function()
 
 	this.LastTime = Date.now();
 	
-	this.poolManager = new PoolManager(this,50,50);
+	this.canvas = document.getElementById("canvas");
+	this.graphics = canvas.getContext("2d");
+	
+	this.poolManager = new PoolManager(this,1,1);
 
 	this.player = new Player(this,IMAGE_URL+"ShooterSD.png",100,94,1,20);
 	
-	this.canvas = document.getElementById("canvas");
-	this.graphics = canvas.getContext("2d");
 	
 	this.graphics.Check = function()
 	{
 		var i = Date.now() - this.drawTime;
-		if(i > 16)
+		if(i >50)
 		{
 			throw(new CheckException("draw too long "));
 		}
-	}
+	};
+	this.graphics.fillCircle = function(x, y, radius)
+	{
+		this.beginPath();
+		this.arc(x,y,radius,0,2*Math.PI);
+		this.closePath();
+		this.fill();
+	};
+	this.graphics.strokeCircle = function(x,y,radius)
+	{
+		this.beginPath();
+		this.arc(x,y,radius,0,2*Math.PI);
+		this.closePath();
+		this.stroke();
+	};
+	
 	this.timerPopEnnemy = 1;
 	this.timer = 0;
+
+	this.pause = false;
+
+	$(document).keydown(function(e){
+		return _this.onKeyDown(e.which);
+	});
+}
+
+Game.prototype.onKeyDown = function(e)
+{
+	if(e == 80)
+		this.pause = !this.pause;
 }
 
 Game.prototype.Update = function(deltaTime)
@@ -89,9 +117,16 @@ Game.prototype.Draw = function(deltaTime)
 			this.player.Draw(this.graphics,deltaTime);
 		//DrawEnnemies
 		for ( var i in this.poolManager.LittleEnnemies)
+		{
 			if(this.poolManager.LittleEnnemies[i] != null)
+			{
 				if( this.poolManager.LittleEnnemies[i].isUsed)
+				{
 					this.poolManager.LittleEnnemies[i].Draw(this.graphics,deltaTime);
+				}
+			}
+			
+		}
 
 		//DrawMissiles
 		for(var i in this.poolManager.PlayerShoots)
@@ -115,7 +150,7 @@ Game.prototype.Draw = function(deltaTime)
 	}
 	catch(e)
 	{
-		console.log(e.text);
+		console.log(e);
 	}
 }
 
@@ -125,8 +160,11 @@ Game.prototype.UpdateTime = function()
 	deltaTime /= 1000;
 	this.LastTime = Date.now();
 	
-	this.Update(deltaTime);
-	this.Draw(deltaTime);
+	if(!this.pause)
+	{
+		this.Update(deltaTime);
+		this.Draw(deltaTime);
+	}
 }
 
 var CheckException = function(text)

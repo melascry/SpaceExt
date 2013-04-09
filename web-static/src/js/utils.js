@@ -10,18 +10,6 @@ window.requestAnimFrame = (function() {
 })();
 
 
-function Distance(sx,ex,sy,ey)
-{
-	return Math.sqrt(SquarredDistance(sx,ex,sy,ey));
-}
-function SquarredDistance(sx,ex,sy,ey)
-{
-	return Squarre(sx-ex)+Squarre(sy-ey);
-}
-function Squarre(x)
-{
-	return x*x;
-}
 
 function encrypt(){
 	var form = document.getElementById("connect-form");

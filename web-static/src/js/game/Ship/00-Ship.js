@@ -11,7 +11,7 @@ var Ship = function(game,type,level)//Initialize with the DB
 	{
 		this.ShootPosition[i] = [-20+20*i,50];
 		this.ShootDirection[i] = [-1+i,-1];
-		var d = Math.sqrt( Squarre(this.ShootDirection[i][0])+ Squarre(this.ShootDirection[i][1]));
+		var d = Math.sqrt( MathUtils.Squarre(this.ShootDirection[i][0])+ MathUtils.Squarre(this.ShootDirection[i][1]));
 		this.ShootDirection[i][0] /= d;
 		this.ShootDirection[i][1] /= d;
 	}

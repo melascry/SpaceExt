@@ -102,13 +102,12 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 		this.PlayerShoots[this.PlayerShoots.length] = new Array();
 		for(var i = 0 ; i < this.game.player.ship.ShootPosition.length ;i++)
 		{
-
 			this.PlayerShoots[this.PlayerShoots.length-1][i] =
 				new PlayerShot(
 								this.game
-								,IMAGE_URL+"Thing.png"
-								,10
-								,10
+								,null
+								,20
+								,20
 								,this.game.player.ship.ShootDamage[i]
 								,this.game.player.ship.ShootDirection[i]
 								);

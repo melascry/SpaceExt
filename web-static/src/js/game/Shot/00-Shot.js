@@ -9,8 +9,5 @@ Shot.prototype = new GameObject();
 
 Shot.prototype.Draw = function(graphics,deltaTime)
 {
-	graphics.save();
-	GameObject.prototype.Draw.call(this,graphics, deltaTime);
-	graphics.restore();
-	
+	GameObject.prototype.Draw.call(this,graphics, deltaTime);	
 }

@@ -18,7 +18,7 @@
 </head>
 <body onload="start()">
 	<!-- <div id="screen"> -->
-		<canvas width="1024" height="600" id="canvas">
+		<canvas width="1024" height="600" id="canvas" style="border:1px solid #f00;">
 		</canvas>
 	<!-- </div> -->
 </body>

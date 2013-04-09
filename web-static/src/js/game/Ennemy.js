@@ -7,6 +7,7 @@ var Ennemy = function(game,img,width,height,index)
 	this.FireTimer = 1;
 	
 	this.index = index; 
+	this.life = 10; 
 }
 
 Ennemy.prototype = new GameObject();
@@ -21,7 +22,7 @@ Ennemy.prototype.Update = function(deltaTime)
 			var c = this.game.poolManager.GetLittleEnnemiesShot();
 			c.x = this.x ;
 			c.y = this.y ;
-			var d = Distance(c.x,this.game.player.x,c.y,this.game.player.y);
+			var d = MathUtils.Distance(c.x,this.game.player.x,c.y,this.game.player.y);
 	
 			c.direction[0] = (this.game.player.x-c.x)/d;
 			c.direction[1] = (this.game.player.y-c.y)/d;
@@ -46,4 +47,14 @@ Ennemy.prototype.PopInWorld = function()
 {
 	this.x = Math.random() * 1000;
 	this.y = 0;
+}
+
+Ennemy.prototype.Attacked = function(damage)
+{
+	this.life -= damage;
+	if(this.life <= 0)
+	{
+		this.isUsed = false;
+		this.life = 10;
+	}
 }

@@ -15,8 +15,8 @@ var GameObject = function(game,img,width,height)
 	this.x = 512;
 	this.y = 300;
 	
-	this.radius = Math.sqrt(width*width + height*height)/2;
-	this.radiusSquarred = (width  * width + height * height )/ 4;
+	this.radius =width/2;
+	this.radiusSquarred = this.radius*this.radius;
 	//console.log("creation : " + img + " : " + this.radiusSquarred);
 	this.life = 1;
 	
