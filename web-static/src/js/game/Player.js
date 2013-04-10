@@ -55,6 +55,7 @@ Player.prototype.Update = function(deltaTime)
 		var X = 0;
 		var Y = 0;
 		
+		//this.ship.Shoot();
 		if(this.canFire)
 		{
 			if(this.keyList[32])

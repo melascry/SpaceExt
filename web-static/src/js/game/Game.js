@@ -111,7 +111,8 @@ Game.prototype.Draw = function(deltaTime)
 	try
 	{
 		this.graphics.save();
-		this.graphics.clearRect(0,0,this.canvas.width,this.canvas.height);
+		this.graphics.fillStyle = 'black';
+		this.graphics.fillRect(0,0,this.canvas.width,this.canvas.height);
 	
 		if(this.player.visible)
 			this.player.Draw(this.graphics,deltaTime);

@@ -5,7 +5,7 @@
 
 /**** ../../web-static/src/js/MathUtils.js ****/
 var MathUtils = {
-	
+
 };
 
 MathUtils.Squarre = function (x)
@@ -259,7 +259,8 @@ Game.prototype.Draw = function(deltaTime)
 	try
 	{
 		this.graphics.save();
-		this.graphics.clearRect(0,0,this.canvas.width,this.canvas.height);
+		this.graphics.fillStyle = 'black';
+		this.graphics.fillRect(0,0,this.canvas.width,this.canvas.height);
 	
 		if(this.player.visible)
 			this.player.Draw(this.graphics,deltaTime);
@@ -426,6 +427,7 @@ Player.prototype.Update = function(deltaTime)
 		var X = 0;
 		var Y = 0;
 		
+		//this.ship.Shoot();
 		if(this.canFire)
 		{
 			if(this.keyList[32])
@@ -658,6 +660,7 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 	this.LittleEnnemiesShoots = new Array();
 	this.Ennemies = new Array();
 	
+	
 	for( var i = 0; i < nbrLittleShip; i++)
 	{
 		this.LittleEnnemies[i] = new Ennemy(this.game,IMAGE_URL+"Ennemy.png",21,22);
@@ -858,6 +861,21 @@ var Ship = function(game,type,level)//Initialize with the DB
 		this.ShootDirection[i][1] /= d;
 	}
 	this.ShootDamage = [0.5*level,1*level,0.5*level];
+	/*
+this.Sources = new Array();
+	
+	for(var i = 0 ; i < 3; i++)
+	{
+		var direc;
+		
+		direc[i] = [-1+i,-1];
+		var d = Math.sqrt( MathUtils.Squarre(direc[i][0])+ MathUtils.Squarre(direc[i][1]));
+		direc[i][0] /= d;
+		direc[i][1] /= d;
+		this.Sources[i] = new ShootSource(game,IMAGE_URL+"Ennemy.png",21,22,direc,level * (0.5+i/2));
+		this.Sources[i].x = -20+20*i;
+		this.Sources[i].y = 50;
+	}*/
 }
 
 /**** ../../web-static/src/js/game/Ship/Bullet.js ****/
@@ -874,7 +892,7 @@ var Lazer = function(game,level)
 	Ship.call(this,game);
 }
 
-Lazer.prototype = new Ship();
+Lazer.prototype = new Ship(); 
 
 /**** ../../web-static/src/js/game/Shot/00-Shot.js ****/
 var Shot = function(game,img,width,height,damage)
@@ -889,6 +907,54 @@ Shot.prototype = new GameObject();
 Shot.prototype.Draw = function(graphics,deltaTime)
 {
 	GameObject.prototype.Draw.call(this,graphics, deltaTime);	
+}
+
+/**** ../../web-static/src/js/game/Shot/BulletShot.js ****/
+var BulletShot = function(game,img,width,height,damage,direction)
+{
+	Shot.call(this,game,img,width,height,damage);
+
+	this.direction = direction;
+	
+	this.gradient = document.createElement('canvas');
+	this.gradient.style.background = 'transparent';
+	this.gradient.width = width;
+	this.gradient.height = height;	
+	this.gradContext = this.gradient.getContext("2d");
+
+	var decal = 0.15;
+	var radiusDraw = this.radius*0.9;
+	this.gradContext.translate(this.gradient.width/2,this.gradient.width/2);
+	this.gradContext.rotate( Math.atan2(direction[1],direction[0]) + Math.PI / 2);
+	this.gradContext.translate(0,Math.round(radiusDraw*decal));
+	var hue = 70;
+	
+    // create radial gradient
+    this.grad = this.gradContext.createRadialGradient(0,Math.round( radiusDraw*decal),Math.round( radiusDraw*(1-decal)), 0, 0, Math.round(radiusDraw));
+    // light blue
+//    this.grad.addColorStop(0, 'rgba(0,0,200,0)');
+//    // dark blue
+//    this.grad.addColorStop(0.9, 'rgba(150,150,255,0.9)');
+//    this.grad.addColorStop(1, 'rgba(200,200,255,1)');
+    this.grad.addColorStop(0, 'hsla('+hue+',100%,30%,0)');
+    // dark blue
+    this.grad.addColorStop(0.8, 'hsla('+hue+',100%,40%,0.9)');
+    this.grad.addColorStop(1, 'hsla('+hue+',100%,75%,1)');
+
+    this.gradContext.fillStyle = this.grad;
+    
+    this.gradContext.beginPath();
+    this.gradContext.arc(0, Math.round(-radiusDraw*decal),Math.round(radiusDraw),0,2*Math.PI);
+    this.gradContext.closePath();
+    this.gradContext.fill();
+}
+
+BulletShot.prototype = new Shot();
+
+BulletShot.prototype.Update = function(deltaTime)
+{
+	this.x += this.direction[0]*deltaTime * 1000;
+	this.y += this.direction[1]*deltaTime * 1000;
 }
 
 /**** ../../web-static/src/js/game/Shot/DroneShot.js ****/
@@ -993,11 +1059,15 @@ var PlayerShot = function(game,img,width,height,damage,direction)
 	this.gradient.width = width;
 	this.gradient.height = height;	
 	this.gradContext = this.gradient.getContext("2d");
+
+	var decal = 0.15;
+	var radiusDraw = this.radius*0.9;
+	this.gradContext.translate(this.gradient.width/2,this.gradient.width/2);
+	this.gradContext.rotate( Math.atan2(direction[1],direction[0]) + Math.PI / 2);
+	this.gradContext.translate(0,Math.round(radiusDraw*decal));
+
+	/*this.grad = this.gradContext.createRadialGradient(0,  0 , this.radius*0.1, -this.radius * direction[0], this.gradient.height - this.radius * direction[1], this.radius);
 	
-	this.gradContext.translate(this.gradient.width/2,0);
-
-	this.grad = this.gradContext.createRadialGradient(0,  0 , this.radius*0.1, -this.radius * direction[0], this.gradient.height - this.radius * direction[1], this.radius);
-
 	this.grad.addColorStop(0, 'rgba(255,0,0,1)');
 	this.grad.addColorStop(1, 'rgba(255,0,0,1)');
 
@@ -1009,8 +1079,38 @@ var PlayerShot = function(game,img,width,height,damage,direction)
 		this.closePath();
 		this.fill();
 	};
+	 */
+	//this.gradContext.fillCircle(0,0,this.radius);
+	/*
+	this.gradContext.beginPath();
+	this.gradContext.lineTo(-5,5);
+	this.gradContext.lineTo(5,5);
+	this.gradContext.lineTo(0,0);
+	this.gradContext.closePath();
+	this.gradContext.fill();
+	*/
 
-	this.gradContext.fillCircle(0,0,this.radius);
+	var hue = 70;
+	
+    // create radial gradient
+    this.grad = this.gradContext.createRadialGradient(0,Math.round( radiusDraw*decal),Math.round( radiusDraw*(1-decal)), 0, 0, Math.round(radiusDraw));
+    // light blue
+//    this.grad.addColorStop(0, 'rgba(0,0,200,0)');
+//    // dark blue
+//    this.grad.addColorStop(0.9, 'rgba(150,150,255,0.9)');
+//    this.grad.addColorStop(1, 'rgba(200,200,255,1)');
+    this.grad.addColorStop(0, 'hsla('+hue+',100%,30%,0)');
+    // dark blue
+    this.grad.addColorStop(0.8, 'hsla('+hue+',100%,40%,0.9)');
+    this.grad.addColorStop(1, 'hsla('+hue+',100%,75%,1)');
+
+    this.gradContext.fillStyle = this.grad;
+    
+    this.gradContext.beginPath();
+    this.gradContext.arc(0, Math.round(-radiusDraw*decal),Math.round(radiusDraw),0,2*Math.PI);
+    this.gradContext.closePath();
+    this.gradContext.fill();
+	
 }
 PlayerShot.prototype = new Shot();
 
@@ -1034,6 +1134,83 @@ PlayerShot.prototype.Draw = function(graphics,deltaTime)
 	graphics.drawImage(this.gradient,0,0);
 	
 	graphics.restore();
+}
+
+// laser
+function testLaser(){
+	var canvas = document.getElementById('myCanvas');
+    var context = canvas.getContext('2d');
+    context.rect(0, 0, canvas.width, canvas.height);
+      //context.rotate(Math.PI/2);
+
+    // Corps laser
+      var laser = document.createElement('canvas');
+      laser.width = 100;
+      laser.height = 1;
+      var laserContext = laser.getContext('2d');
+    laserContext.rect(0, 0, laser.width, laser.height);
+    // create radial gradient
+    var grd = laserContext.createLinearGradient(0, 0, 100, 0);
+    // light blue
+    grd.addColorStop(0.0, 'rgba(50,50,255,0)');
+    // dark blue
+    grd.addColorStop(0.5, 'rgba(255,255,255,1)');
+    grd.addColorStop(01, 'rgba(50,50,255,0)');
+
+    laserContext.fillStyle = grd;
+	laserContext.fill();
+	
+	// Dessin du laser (hauteur variable)
+      context.drawImage(laser, 0, 50, 100, 200);
+      
+      
+      // Tête laser
+      context.translate(50, 50);
+      var hue = 200;
+	radiusDraw=50;
+      decal = 0.15;
+    // create radial gradient
+    grad = context.createRadialGradient(0,
+       0,
+   Math.round( radiusDraw*0.05), 0, 0, 
+            Math.round(radiusDraw));
+    // light blue
+//    this.grad.addColorStop(0, 'rgba(0,0,200,0)');
+//    // dark blue
+//    this.grad.addColorStop(0.9, 'rgba(150,150,255,0.9)');
+//    this.grad.addColorStop(1, 'rgba(200,200,255,1)');
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    // dark blue
+    grad.addColorStop(1, 'rgba(50,50,255,0)');
+
+    context.fillStyle = grad;
+    
+    context.beginPath();
+    context.arc(0, 0,
+                Math.round(radiusDraw),0,Math.PI, true);
+    context.closePath();
+    context.fill();
+}
+
+/**** ../../web-static/src/js/game/ShotSource/00-ShootSource.js ****/
+var ShootSource = function(game,img,width,height,direction,damage)
+{
+	GameObject.call(this,game,img,width,height);
+
+	this.shootDirection = direction
+	this.damage = damage;
+}
+
+ShootSource.prototype = new GameObject();
+
+ShootSource.prototype.Draw(graphics, deltaTime)
+{
+	GameObject.prototype.Draw.call(this,graphics,deltaTime);
+}
+
+ShootSource.prototpe.Shoot()
+{
+	
 }
 
 /**** ../../web-static/src/js/main.js ****/

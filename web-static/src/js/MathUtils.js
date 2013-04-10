@@ -1,5 +1,5 @@
 var MathUtils = {
-	
+
 };
 
 MathUtils.Squarre = function (x)

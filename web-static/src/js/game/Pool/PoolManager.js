@@ -9,6 +9,7 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 	this.LittleEnnemiesShoots = new Array();
 	this.Ennemies = new Array();
 	
+	
 	for( var i = 0; i < nbrLittleShip; i++)
 	{
 		this.LittleEnnemies[i] = new Ennemy(this.game,IMAGE_URL+"Ennemy.png",21,22);
