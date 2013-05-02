@@ -3,6 +3,7 @@ namespace SpaceExt;
 
 require_once 'User.php';
 require_once 'Utils.php';
+//require_once('../app/config/10-path.php');
 
 use Facebook;
 
@@ -48,7 +49,9 @@ class App{
 			{
 				$userProfile = $fbApi->api('/me/likes'); //Need the user to install
 				Utils::debug($userProfile);
-				die();
+				self::handleGameForm();
+				include '../app/templates/index.tpl';
+				exit;
 			}
 			//die('you\'r on facebook : '. $userId);
 		}
