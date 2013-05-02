@@ -8,7 +8,7 @@
 	<script type="text/javascript" src="/spaceext-static/js/script.js"></script>
 
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<title>SpaceExt</title>
+	<title>index SpaceExt</title>
 	<script>
 		<?php
 			echo 'var WEB_STATIC_URL = "'.WEB_STATIC_URL.'";';

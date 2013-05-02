@@ -1,9 +1,13 @@
 <?php
-use SpaceExt\Foo;
-
-use SpaceExt\App;
 
 require_once('../app/config.php');
-include(TEMPLATE_PATH.'/index.tpl');
-//new App();
-//new Foo();
+require_once('../app/SpaceExt/App.php');
+require_once('../vendor/fbapi/facebook.php');
+
+if(isset($_SESSION['user'])){
+	SpaceExt\App::handleGameForm();
+	include TEMPLATES_PATH.'index.tpl';
+}else{
+	SpaceExt\App::handleConnectForm();
+	include TEMPLATES_PATH.'connect.tpl';
+}
