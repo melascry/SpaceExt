@@ -1,20 +1,20 @@
-var Ennemy = function(game,img,width,height,index)
+var Ennemy = function(game,parent,img,width,height,index)
 {
-	GameObject.call(this,game,img,width,height);
+	GameObject.call(this,game,parent,img,width,height);
 	
 	this.timer = 0;
 	
 	this.FireTimer = 1;
 	
 	this.index = index; 
-	this.life = 10; 
+	this.life = 1; 
 }
 
 Ennemy.prototype = new GameObject();
 
 Ennemy.prototype.Update = function(deltaTime)
 {
-	if(this.game.player != null)
+	if(this.game.player != null && this.game.player.exists)
 	{
 		this.timer += deltaTime;
 		if(this.timer >= this.FireTimer)
@@ -40,7 +40,14 @@ Ennemy.prototype.Update = function(deltaTime)
 
 Ennemy.prototype.Draw = function(graphics, deltaTime)
 {
+	graphics.save();
+	
+	graphics.translate(this.x,this.y);
+	graphics.drawImage(this.img,this.offsetX, this.offsetY);
+	
 	GameObject.prototype.Draw.call(this,graphics,deltaTime);
+	
+	graphics.restore();
 }
 
 Ennemy.prototype.PopInWorld = function()

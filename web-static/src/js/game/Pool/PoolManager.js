@@ -12,7 +12,7 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 	
 	for( var i = 0; i < nbrLittleShip; i++)
 	{
-		this.LittleEnnemies[i] = new Ennemy(this.game,IMAGE_URL+"Ennemy.png",21,22);
+		this.LittleEnnemies[i] = new Ennemy(this.game,null,IMAGE_URL+"Ennemy.png",21,22);
 	}
 	/*
 	this.GetEnnemy = function(index)
@@ -41,7 +41,7 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 			}
 		}
 		
-		this.LittleEnnemies[this.LittleEnnemies.length] = new Ennemy(this.game,IMAGE_URL+"Ennemy.png",21,22,EnnemiesIndices.LITTLE);
+		this.LittleEnnemies[this.LittleEnnemies.length] = new Ennemy(this.game,null,IMAGE_URL+"Ennemy.png",21,22,EnnemiesIndices.LITTLE);
 		//console.log("created pool entity");
 		this.LittleEnnemies[this.LittleEnnemies.length-1].isUsed = true;
 		//console.log("Little length : " + this.LittleEnnemies.length);
@@ -60,7 +60,7 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 				return this.DroneShoots[i];
 			}
 		}
-		this.DroneShoots[this.DroneShoots.length] = new DroneShot(this.game,IMAGE_URL+"Thing.png",10,10,1)
+		this.DroneShoots[this.DroneShoots.length] = new DroneShot(this.game,null,IMAGE_URL+"Thing.png",10,10,1)
 		//console.log("created pool entity");
 		this.DroneShoots[this.DroneShoots.length-1].isUsed = true;
 		//console.log("pool entity is used");
@@ -70,53 +70,28 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 	
 	this.GetPlayerShot = function()
 	{
-		for( var i in this.PlayerShoots)
+		for(var i in this.PlayerShoots)
 		{
-			var isOk = true;
-			//console.log(this.PlayerShoots[i]);
-			for(var e =0; e < this.PlayerShoots[i].length; e++)
+			if(!this.PlayerShoots[i].isUsed)
 			{
-				//console.log(this.PlayerShoots[i]);
-				if(this.PlayerShoots[i][e].isUsed)
-				{
-					isOk = false;
-				}
-				//console.log(this.PlayerShoots[i]);
-			}
-
-			
-			if(isOk)
-			{
-				//console.log(this.PlayerShoots[i]);
-				for(var e =0; e < this.PlayerShoots[i].length; e++)
-				{
-					//console.log(e + " : " + this.PlayerShoots[i][e]);
-					this.PlayerShoots[i][e].isUsed = true;
-				}
-				//console.log("Shot length : " + this.PlayerShoots.length);
-				//console.log(this.PlayerShoots[i]);
-				
+				this.PlayerShoots[i].isUsed= true;
 				return this.PlayerShoots[i];
 			}
 		}
 		
-		this.PlayerShoots[this.PlayerShoots.length] = new Array();
-		for(var i = 0 ; i < this.game.player.ship.ShootPosition.length ;i++)
-		{
-			this.PlayerShoots[this.PlayerShoots.length-1][i] =
-				new PlayerShot(
-								this.game
-								,null
-								,20
-								,20
-								,this.game.player.ship.ShootDamage[i]
-								,this.game.player.ship.ShootDirection[i]
-								);
+		this.PlayerShoots[this.PlayerShoots.length] =
+			new PlayerShot(
+							this.game
+							,null
+							,""
+							,20
+							,20
+							,0
+							,[0,0]
+							);
 			
-			
-			this.PlayerShoots[this.PlayerShoots.length-1][i].isUsed = true;
-		}
-		//console.log(this.PlayerShoots[this.PlayerShoots.length-1]);
+		this.PlayerShoots[this.PlayerShoots.length-1].isUsed = true;
+
 		return this.PlayerShoots[this.PlayerShoots.length-1];
 	}
 	
@@ -132,7 +107,7 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 			}
 		}
 		
-		this.LittleEnnemiesShoots[this.LittleEnnemiesShoots.length] = new EnnemyShot(this.game,IMAGE_URL+"Thing.png",10,10);
+		this.LittleEnnemiesShoots[this.LittleEnnemiesShoots.length] = new EnnemyShot(this.game,null,IMAGE_URL+"Thing.png",10,10);
 		//console.log("created pool entity");
 		this.LittleEnnemiesShoots[this.LittleEnnemiesShoots.length-1].isUsed = true;
 		//console.log("pool entity is used");

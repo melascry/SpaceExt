@@ -16,7 +16,10 @@ var Game = function()
 	
 	this.poolManager = new PoolManager(this,1,1);
 
-	this.player = new Player(this,IMAGE_URL+"ShooterSD.png",100,94,1,20);
+	this.player = new Player(this,null,IMAGE_URL+"ShooterSDLittle.png",50,47,1,null);
+	var playerShip = new Ship(this,this.player,IMAGE_URL+"ShooterSDLittle.png",50,47,1,1);
+	this.player.ship = playerShip;
+	this.player.AddChild(playerShip);
 	
 	
 	this.graphics.Check = function()
@@ -87,10 +90,9 @@ Game.prototype.Update = function(deltaTime)
 	
 	for(var i in this.poolManager.PlayerShoots)
 		if(this.poolManager.PlayerShoots[i] != null)
-			for(var e in this.poolManager.PlayerShoots[i])
-				if(this.poolManager.PlayerShoots[i][e].isUsed)
-					if(this.poolManager.PlayerShoots[i][e].exists)
-						this.poolManager.PlayerShoots[i][e].Update(deltaTime);
+				if(this.poolManager.PlayerShoots[i].isUsed)
+					if(this.poolManager.PlayerShoots[i].exists)
+						this.poolManager.PlayerShoots[i].Update(deltaTime);
 
 	for(var i in this.poolManager.DroneShoots)
 		if(this.poolManager.DroneShoots[i] != null)
@@ -108,33 +110,28 @@ Game.prototype.Update = function(deltaTime)
 Game.prototype.Draw = function(deltaTime)
 {
 	this.graphics.drawTime = Date.now();
-	try
-	{
+	//try
+	//{
 		this.graphics.save();
 		this.graphics.fillStyle = 'black';
 		this.graphics.fillRect(0,0,this.canvas.width,this.canvas.height);
 	
 		if(this.player.visible)
 			this.player.Draw(this.graphics,deltaTime);
+		
 		//DrawEnnemies
 		for ( var i in this.poolManager.LittleEnnemies)
-		{
 			if(this.poolManager.LittleEnnemies[i] != null)
-			{
 				if( this.poolManager.LittleEnnemies[i].isUsed)
-				{
-					this.poolManager.LittleEnnemies[i].Draw(this.graphics,deltaTime);
-				}
-			}
-			
-		}
+					if(this.poolManager.LittleEnnemies[i].visible)
+						this.poolManager.LittleEnnemies[i].Draw(this.graphics,deltaTime);
 
 		//DrawMissiles
 		for(var i in this.poolManager.PlayerShoots)
 			if(this.poolManager.PlayerShoots[i] != null)
-				for(var e in this.poolManager.PlayerShoots[i])
-					if( this.poolManager.PlayerShoots[i][e].isUsed)
-						this.poolManager.PlayerShoots[i][e].Draw(this.graphics,deltaTime);
+					if( this.poolManager.PlayerShoots[i].isUsed)
+						if(this.poolManager.PlayerShoots[i].visible)
+							this.poolManager.PlayerShoots[i].Draw(this.graphics,deltaTime);
 
 		for(var i in this.poolManager.DroneShoots)
 			if(this.poolManager.DroneShoots[i] != null)
@@ -148,11 +145,11 @@ Game.prototype.Draw = function(deltaTime)
 					this.poolManager.LittleEnnemiesShoots[i].Draw(this.graphics,deltaTime);
 		
 		this.graphics.restore();
-	}
+	/*}
 	catch(e)
 	{
 		console.log(e);
-	}
+	}*/
 }
 
 Game.prototype.UpdateTime = function()

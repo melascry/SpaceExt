@@ -1,6 +1,8 @@
-var EnnemyShot = function(game,img,width,height,damage)
+var EnnemyShot = function(game,parent,img,width,height,damage)
 {
-	Shot.call(this,game,img,width,height,damage);
+	Shot.call(this,game,parent,img,width,height,damage);
+	
+	this.speed = 200;
 	
 	this.gradient = document.createElement('canvas');
 	this.gradient.style.background = 'transparent';
@@ -44,9 +46,45 @@ EnnemyShot.prototype = new Shot();
 
 EnnemyShot.prototype.Update = function(deltaTime)
 {
-	this.x += this.direction[0]*deltaTime * 500;
-	this.y += this.direction[1]*deltaTime * 500;
-	Shot.prototype.Update.call(this,deltaTime);
+	if(this.isUsed)
+	{
+		if(this.game.player.physical)
+		{
+			var playX = this.game.player.x;
+			var playY = this.game.player.y;
+			
+			var distance = MathUtils.SquarredDistance(playX,this.x, playY ,this.y);
+		
+			//Test for all drones
+			for(var e in this.game.player.drones)
+			{
+				var drone = this.game.player.drones[e];
+				
+				if(distance <= this.game.player.radiusSquarred + this.game.player.droneRadiusSquarred + drone.radiusSquarred)
+				{
+					var distanceD = MathUtils.SquarredDistance(drone.x+playX,this.x,drone.y+playY,this.y);
+					
+					if(distanceD <= this.radiusSquarred + drone.radiusSquarred)
+					{
+						this.isUsed = false;
+						drone.alive = false;
+					}
+				}
+				if(distance <= this.radiusSquarred + this.game.player.radiusSquarred)
+				{
+					this.game.player.exists = false;
+					this.game.player.visible = false;
+					this.game.player.physical = false;
+					this.isUsed = false;
+				}
+			}
+		}
+		
+		this.x += this.direction[0]*deltaTime * this.speed;
+		this.y += this.direction[1]*deltaTime * this.speed;
+		
+		Shot.prototype.Update.call(this,deltaTime);
+	}
 	
 	if(this.x > this.game.canvas.width || this.x < 0+ this.offsetX*2 || this.y < 0+ this.offsetY*2 || this.y > this.game.canvas.height)
 	{
