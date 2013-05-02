@@ -47,39 +47,15 @@ class App{
 			}
 			else if(User::fbLogin($userId))
 			{
-				$userProfile = $fbApi->api('/me/likes'); //Need the user to install
-				Utils::debug($userProfile);
-				self::handleGameForm();
-				include '../app/templates/index.tpl';
-				exit;
+				//$userProfile = $fbApi->api('/me/likes'); //Need the user to install
+				//Utils::debug($userProfile);
+				//self::handleGameForm();
+				//header('Location: index.php');
+				//include '../app/templates/index.tpl';
+				
+				die();
 			}
 			//die('you\'r on facebook : '. $userId);
-		}
-		else if(isset($_POST['action-login']) || isset($_POST['action-register']))
-		{
-			if(!isset($_POST['login']))
-			{
-				trigger_error('Missing login');
-			}else if(!isset($_POST['password']))
-			{
-				trigger_error('Missing password');
-			}else
-			{
-				$password = \AesCtr::decrypt($_POST['password'], '09ed931e1782289f8f9a42f837a46fa0', 256);
-				if(isset($_POST['action-login']))
-				{
-					if(User::login($_POST['login'], $password))
-					{
-						header('Location: index.php');
-					}else{
-						header('Location: index.php?bad_login='.$_POST['login']);
-					}
-				}
-				if(isset($_POST['action-register']))
-				{
-					User::register($_POST['login'], $password);
-				}
-			}
 		}
 	}
 
