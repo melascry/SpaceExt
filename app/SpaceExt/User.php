@@ -54,6 +54,7 @@ class User{
 	 * @param unknown $login
 	 * @param unknown $password
 	 */
+	/*
 	public static function register($login, $password){
 		if(strlen($password) < 5){
 			throw new \Exception('Password too short (3 char min)');
@@ -75,25 +76,39 @@ class User{
 		}
 		return false;
 	}
-	
+	*/
 
 	public static function fbLogin($fbId){
-		$query = App::getDB()->prepare('SELECT * FROM user WHERE idfb=? LIMIT 1');
-		if($query->execute(array($fbId))){
+		$query = App::getDB()->prepare('SELECT * FROM user WHERE idfb=?');
+		
+		if($query->execute( array($fbId) ))
+		{
 			$res = $query->fetch();
-			if($res){
-				$_SESSION['user'] = new User($res->fbId);
+			//echo ' fetching ';
+			//Utils::debug($res);
+			if($res)
+			{
+				$_SESSION['indexUser'] = new User($res->idfb);
 			}
 		}
-		if(!isset($_SESSION['user'])){
+		if(!isset($_SESSION['indexUser']))
+		{
+			echo ' user not set ';
 			$userProfile = App::getFbApi()->api('/me');
-			$query = App::getDB()->prepare('INSERT INTO user (fbId) VALUES (?)');
-			if($query->execute(array($fbId))){
+			
+			$query = App::getDB()->prepare('INSERT INTO user (idfb) VALUES (?)');
+			//echo $query;
+			if($query->execute(array($fbId)))
+			{
 				return self::fbLogin($fbId);
-			}else{
+			}else
+			{
 				return false;
 			}
-		}else{
+		}
+		else
+		{
+			echo ' user created ';
 			return true;
 		}
 	}

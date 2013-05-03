@@ -50,8 +50,8 @@ class App{
 				//$userProfile = $fbApi->api('/me/likes'); //Need the user to install
 				//Utils::debug($userProfile);
 				//self::handleGameForm();
-				//header('Location: index.php');
-				//include '../app/templates/index.tpl';
+				
+					include '../app/templates/index.tpl';
 				
 				die();
 			}
