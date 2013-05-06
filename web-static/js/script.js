@@ -1031,6 +1031,7 @@ EnnemyShot.prototype.Draw = function(graphics,deltaTime)
 {
 	graphics.save();
 	graphics.Check();
+	
 	graphics.translate(this.x+this.offsetX,this.y+this.offsetY);
 
 	graphics.drawImage(this.gradient,0,0);
@@ -1144,27 +1145,6 @@ function testLaser(){
                 Math.round(radiusDraw),0,Math.PI, true);
     context.closePath();
     context.fill();
-}
-
-/**** ../../web-static/src/js/game/ShotSource/00-ShootSource.js ****/
-var ShootSource = function(game,img,width,height,direction,damage)
-{
-	GameObject.call(this,game,img,width,height);
-
-	this.shootDirection = direction
-	this.damage = damage;
-}
-
-ShootSource.prototype = new GameObject();
-
-ShootSource.prototype.Draw(graphics, deltaTime)
-{
-	GameObject.prototype.Draw.call(this,graphics,deltaTime);
-}
-
-ShootSource.prototpe.Shoot()
-{
-	
 }
 
 /**** ../../web-static/src/js/game/ShotSources/ShotSource.js ****/
@@ -1304,6 +1284,7 @@ EnnemiesIndices =
 
 function start()
 {
+	console.log('creating game');
 	game = new Game();
 }
 

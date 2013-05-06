@@ -96,6 +96,7 @@ EnnemyShot.prototype.Draw = function(graphics,deltaTime)
 {
 	graphics.save();
 	graphics.Check();
+	
 	graphics.translate(this.x+this.offsetX,this.y+this.offsetY);
 
 	graphics.drawImage(this.gradient,0,0);
