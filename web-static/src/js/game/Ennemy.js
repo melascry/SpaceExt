@@ -4,7 +4,7 @@ var Ennemy = function(game,parent,img,width,height,index)
 	
 	this.timer = 0;
 	
-	this.FireTimer = 1;
+	this.FireTimer = 0.05;
 	
 	this.index = index; 
 	this.life = 1; 
@@ -14,6 +14,11 @@ Ennemy.prototype = new GameObject();
 
 Ennemy.prototype.Update = function(deltaTime)
 {
+	if(this.y > this.game.canvas.height)
+	{
+		this.Die();
+	}
+	
 	if(this.game.player != null && this.game.player.exists)
 	{
 		this.timer += deltaTime;
@@ -30,12 +35,10 @@ Ennemy.prototype.Update = function(deltaTime)
 			this.timer = 0;
 		}
 	}
+	
 	this.y += 50*deltaTime;
 	
-	GameObject.prototype.Update.call(this,deltaTime);
-
-	if(this.y > this.game.canvas.height)
-		this.isUsed = false;
+	GameObject.prototype.Update.call(this,deltaTime);	
 }
 
 Ennemy.prototype.Draw = function(graphics, deltaTime)
@@ -61,7 +64,16 @@ Ennemy.prototype.Attacked = function(damage)
 	this.life -= damage;
 	if(this.life <= 0)
 	{
-		this.isUsed = false;
-		this.life = 10;
+		this.Die();
+		var c = this.game.poolManager.GetCollectible();
+		
+		c.x = this.x;
+		c.y = this.y;
 	}
+}
+
+Ennemy.prototype.Die = function()
+{
+	this.life = 1;
+	GameObject.prototype.Die.call(this);
 }

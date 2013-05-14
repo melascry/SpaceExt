@@ -32,6 +32,8 @@ RadialDrone.prototype.Update = function(deltaTime)
 		{
 			this.timerRevive = 0;
 			this.alive = true;
+			this.physical = true;
+			this.visible = true;
 		}
 	}
 
@@ -52,4 +54,10 @@ RadialDrone.prototype.Draw = function(graphics,deltaTime)
 		
 		graphics.restore();
 	}
+}
+
+
+RadialDrone.prototype.Die = function()
+{
+	GameObject.prototype.Die.call(this);
 }

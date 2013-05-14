@@ -11,6 +11,5 @@ EnnemiesIndices =
 
 function start()
 {
-	console.log('creating game');
 	game = new Game();
 }

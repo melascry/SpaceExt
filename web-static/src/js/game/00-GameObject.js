@@ -23,6 +23,9 @@ var GameObject = function(game,parent,img,width,height)
 	this.parent = parent;
 	this.children = new Array();
 	
+	if(this.parent != null)
+		this.parent.AddChild(this);
+	
 	this.exists = true;
 	this.visible = true;
 	this.isUsed = false;
@@ -31,20 +34,18 @@ var GameObject = function(game,parent,img,width,height)
 };
 GameObject.prototype.Update = function(deltaTime)
 {
-	if(this.exists)
+	if(this.life <=0)
 	{
-		if(this.life <=0)
-		{
-			this.Die();
-			return;
-		}
-
-		//if(this.physical)
-			//this.TestPhysique(this.game.poolManager);
-		
-		for(i in this.children)
-			this.children[i].Update(deltaTime);
+		this.Die();
+		return;
 	}
+
+	//if(this.physical)
+		//this.TestPhysique(this.game.poolManager);
+	
+	for(i in this.children)
+		if(this.children[i].exists)
+			this.children[i].Update(deltaTime);
 };
 GameObject.prototype.Draw = function(graphics,deltaTime)
 {
@@ -59,7 +60,6 @@ GameObject.prototype.Draw = function(graphics,deltaTime)
 
 GameObject.prototype.TestPhysique = function(pool)
 {
-	//console.log("Calling physics of undefined behaviour");
 }
 
 GameObject.prototype.GetWorldPositionX = function()
@@ -85,5 +85,15 @@ GameObject.prototype.AddChild = function(child)
 
 GameObject.prototype.Die = function()
 {
-	delete this;
+	this.isUsed = false;
+	this.exists = false;
+	this.physical = false;
+	this.visible = false;
+};
+GameObject.prototype.ReUse = function()
+{
+	this.isUsed = true;
+	this.exists = true;
+	this.physical = true;
+	this.visible = true;	
 };

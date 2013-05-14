@@ -12,3 +12,8 @@ Shot.prototype.Draw = function(graphics,deltaTime)
 {
 	GameObject.prototype.Draw.call(this,graphics, deltaTime);	
 }
+
+Shot.prototype.Die = function()
+{
+	GameObject.prototype.Die.call(this);
+}

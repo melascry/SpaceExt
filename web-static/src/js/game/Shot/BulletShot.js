@@ -44,3 +44,9 @@ BulletShot.prototype.Update = function(deltaTime)
 	this.x += this.direction[0]*deltaTime * 1000;
 	this.y += this.direction[1]*deltaTime * 1000;
 }
+
+
+BulletShot.prototype.Die = function()
+{
+	Shot.prototype.Die.call(this);
+}

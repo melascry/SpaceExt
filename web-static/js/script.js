@@ -23,6 +23,15 @@ MathUtils.Distance = function (sx,ex,sy,ey)
 	return Math.sqrt(MathUtils.SquarredDistance(sx,ex,sy,ey));
 }
 
+MathUtils.Normalize = function( direction)
+{
+	var d = MathUtils.Distance(0,direction[0],0,direction[1]);
+	
+	direction[0] /= d;
+	direction[1] /= d;
+	
+	return direction;
+}
 
 /**** ../../web-static/src/js/Test.js ****/
 var Test = function()
@@ -63,6 +72,9 @@ var GameObject = function(game,parent,img,width,height)
 	this.parent = parent;
 	this.children = new Array();
 	
+	if(this.parent != null)
+		this.parent.AddChild(this);
+	
 	this.exists = true;
 	this.visible = true;
 	this.isUsed = false;
@@ -71,20 +83,18 @@ var GameObject = function(game,parent,img,width,height)
 };
 GameObject.prototype.Update = function(deltaTime)
 {
-	if(this.exists)
+	if(this.life <=0)
 	{
-		if(this.life <=0)
-		{
-			this.Die();
-			return;
-		}
-
-		//if(this.physical)
-			//this.TestPhysique(this.game.poolManager);
-		
-		for(i in this.children)
-			this.children[i].Update(deltaTime);
+		this.Die();
+		return;
 	}
+
+	//if(this.physical)
+		//this.TestPhysique(this.game.poolManager);
+	
+	for(i in this.children)
+		if(this.children[i].exists)
+			this.children[i].Update(deltaTime);
 };
 GameObject.prototype.Draw = function(graphics,deltaTime)
 {
@@ -99,7 +109,6 @@ GameObject.prototype.Draw = function(graphics,deltaTime)
 
 GameObject.prototype.TestPhysique = function(pool)
 {
-	//console.log("Calling physics of undefined behaviour");
 }
 
 GameObject.prototype.GetWorldPositionX = function()
@@ -125,8 +134,102 @@ GameObject.prototype.AddChild = function(child)
 
 GameObject.prototype.Die = function()
 {
-	delete this;
+	this.isUsed = false;
+	this.exists = false;
+	this.physical = false;
+	this.visible = false;
 };
+GameObject.prototype.ReUse = function()
+{
+	this.isUsed = true;
+	this.exists = true;
+	this.physical = true;
+	this.visible = true;	
+};
+
+/**** ../../web-static/src/js/game/Collectible.js ****/
+var Collectible = function(game,parent,img,width,height,value)
+{
+	GameObject.call(this,game,parent,img,width,height);
+	
+	this.value = 10;
+	
+	this.type = 'Gold';
+	this.speed = 50;
+	
+	this.speedMultiplier = 10;
+	
+	this.GoToPlayer = false;
+	this.goingToplayer = false;
+}
+
+Collectible.prototype = new GameObject();
+
+Collectible.prototype.Update = function(deltaTime)
+{
+	if(this.y > this.game.canvas.height)
+		this.Die();
+	
+	var direction = new Array();
+
+	if(this.GoToPlayer)
+	{
+			direction = [
+			                 this.game.player.x-this.x, this.game.player.y - this.y
+			                 ];
+			direction = MathUtils.Normalize(direction);
+			direction[0]*=this.speedMultiplier;
+			direction[1]*=this.speedMultiplier;
+			
+		this.goingToplayer = true;
+		
+	}
+	else
+	{
+		
+			if(this.game.player.y < 200 )
+			{
+				this.GoToPlayer = true;
+			}
+			direction[0] = 0;
+			direction[1] = 1;
+		
+	}
+	
+	this.x += this.speed * direction[0] * deltaTime;
+	this.y += this.speed * direction[1] * deltaTime;
+
+	var d = MathUtils.Distance(this.x,this.game.player.x,this.y,this.game.player.y);
+
+	if( d <= this.radius + this.game.player.ship.collectibleRadius)
+	{
+		this.game.AddGold(this.value * (this.type == 'Gold' ? 1 : 2));
+		
+		this.Die();
+	}
+	
+	GameObject.prototype.Update.call(this,deltaTime);
+}
+
+Collectible.prototype.Draw = function(graphics,deltaTime)
+{
+	graphics.save();
+	
+	graphics.translate(this.x,this.y);
+	graphics.drawImage(this.img,this.offsetX, this.offsetY);
+	
+	GameObject.prototype.Draw.call(this,graphics,deltaTime);
+	
+	graphics.restore();
+}
+
+Collectible.prototype.Die = function()
+{
+	this.GoToPlayer = false;
+	this.goingToplayer = false;
+	
+	GameObject.prototype.Die.call(this);
+}
 
 /**** ../../web-static/src/js/game/Ennemy.js ****/
 var Ennemy = function(game,parent,img,width,height,index)
@@ -135,7 +238,7 @@ var Ennemy = function(game,parent,img,width,height,index)
 	
 	this.timer = 0;
 	
-	this.FireTimer = 1;
+	this.FireTimer = 0.05;
 	
 	this.index = index; 
 	this.life = 1; 
@@ -145,6 +248,11 @@ Ennemy.prototype = new GameObject();
 
 Ennemy.prototype.Update = function(deltaTime)
 {
+	if(this.y > this.game.canvas.height)
+	{
+		this.Die();
+	}
+	
 	if(this.game.player != null && this.game.player.exists)
 	{
 		this.timer += deltaTime;
@@ -161,12 +269,10 @@ Ennemy.prototype.Update = function(deltaTime)
 			this.timer = 0;
 		}
 	}
+	
 	this.y += 50*deltaTime;
 	
-	GameObject.prototype.Update.call(this,deltaTime);
-
-	if(this.y > this.game.canvas.height)
-		this.isUsed = false;
+	GameObject.prototype.Update.call(this,deltaTime);	
 }
 
 Ennemy.prototype.Draw = function(graphics, deltaTime)
@@ -192,14 +298,25 @@ Ennemy.prototype.Attacked = function(damage)
 	this.life -= damage;
 	if(this.life <= 0)
 	{
-		this.isUsed = false;
-		this.life = 10;
+		this.Die();
+		var c = this.game.poolManager.GetCollectible();
+		
+		c.x = this.x;
+		c.y = this.y;
 	}
+}
+
+Ennemy.prototype.Die = function()
+{
+	this.life = 1;
+	GameObject.prototype.Die.call(this);
 }
 
 /**** ../../web-static/src/js/game/Game.js ****/
 var Game = function()
 {
+	GameObject.call(this,this,null,"",0,0);
+	
 	var _this = this;
 		
 	requestAnimFrame(
@@ -214,13 +331,13 @@ var Game = function()
 	this.canvas = document.getElementById("canvas");
 	this.graphics = canvas.getContext("2d");
 	
+	this.jScore = $('#score');
+	
 	this.poolManager = new PoolManager(this,1,1);
 
-	this.player = new Player(this,null,IMAGE_URL+"ShooterSDLittle.png",50,47,1,null);
+	this.player = new Player(this,this,IMAGE_URL+"ShooterSDLittle.png",50,47,1,null);
 	var playerShip = new Ship(this,this.player,IMAGE_URL+"ShooterSDLittle.png",50,47,1,1);
 	this.player.ship = playerShip;
-	this.player.AddChild(playerShip);
-	
 	
 	this.graphics.Check = function()
 	{
@@ -249,11 +366,22 @@ var Game = function()
 	this.timer = 0;
 
 	this.pause = false;
+	
+	this.gold = 0;
+	this.cristal = 0;
+	
+
+	// Set the user past data in the game;
+	this.gold = Math.round(userData.gold);
+	this.jScore.html(this.gold);
+	//////////////////////////////////////
 
 	$(document).keydown(function(e){
 		return _this.onKeyDown(e.which);
 	});
 }
+
+Game.prototype = new GameObject();
 
 Game.prototype.onKeyDown = function(e)
 {
@@ -271,43 +399,10 @@ Game.prototype.Update = function(deltaTime)
 		ennemy.PopInWorld();
 	}
 	
-	/*var test = new Array();
-	for(var i in this.poolManager.PlayerShoots)
-		test[i] = this.poolManager.PlayerShoots[i].length;*/
-	if(this.player != null && this.player.exists)
-		this.player.Update(deltaTime);
-	/*for(var i in test)
-	{
-		if(test[i] != this.poolManager.PlayerShoots[i].length)
-			console.log("different :O");
-	}*/
-	
-	for ( var i in this.poolManager.LittleEnnemies)
-		if(this.poolManager.LittleEnnemies[i] != null)
-			if( this.poolManager.LittleEnnemies[i].isUsed)
-				if(this.poolManager.LittleEnnemies[i].exists)
-					this.poolManager.LittleEnnemies[i].Update(deltaTime);
-	
-	for(var i in this.poolManager.PlayerShoots)
-		if(this.poolManager.PlayerShoots[i] != null)
-				if(this.poolManager.PlayerShoots[i].isUsed)
-					if(this.poolManager.PlayerShoots[i].exists)
-						this.poolManager.PlayerShoots[i].Update(deltaTime);
-
-	for(var i in this.poolManager.DroneShoots)
-		if(this.poolManager.DroneShoots[i] != null)
-			if( this.poolManager.DroneShoots[i].isUsed)
-				if(this.poolManager.DroneShoots[i].exists)
-					this.poolManager.DroneShoots[i].Update(deltaTime);
-	
-	for( var i in this.poolManager.LittleEnnemiesShoots)
-		if(this.poolManager.LittleEnnemiesShoots[i] != null)
-			if( this.poolManager.LittleEnnemiesShoots[i].isUsed)
-				if(this.poolManager.LittleEnnemiesShoots[i].exists)
-					this.poolManager.LittleEnnemiesShoots[i].Update(deltaTime);
+	GameObject.prototype.Update.call(this,deltaTime);	
 }
 
-Game.prototype.Draw = function(deltaTime)
+Game.prototype.Draw = function(graphics,deltaTime)
 {
 	this.graphics.drawTime = Date.now();
 	//try
@@ -315,35 +410,9 @@ Game.prototype.Draw = function(deltaTime)
 		this.graphics.save();
 		this.graphics.fillStyle = 'black';
 		this.graphics.fillRect(0,0,this.canvas.width,this.canvas.height);
+		
+		GameObject.prototype.Draw.call(this,this.graphics, deltaTime);
 	
-		if(this.player.visible)
-			this.player.Draw(this.graphics,deltaTime);
-		
-		//DrawEnnemies
-		for ( var i in this.poolManager.LittleEnnemies)
-			if(this.poolManager.LittleEnnemies[i] != null)
-				if( this.poolManager.LittleEnnemies[i].isUsed)
-					if(this.poolManager.LittleEnnemies[i].visible)
-						this.poolManager.LittleEnnemies[i].Draw(this.graphics,deltaTime);
-
-		//DrawMissiles
-		for(var i in this.poolManager.PlayerShoots)
-			if(this.poolManager.PlayerShoots[i] != null)
-					if( this.poolManager.PlayerShoots[i].isUsed)
-						if(this.poolManager.PlayerShoots[i].visible)
-							this.poolManager.PlayerShoots[i].Draw(this.graphics,deltaTime);
-
-		for(var i in this.poolManager.DroneShoots)
-			if(this.poolManager.DroneShoots[i] != null)
-				if( this.poolManager.DroneShoots[i].isUsed)
-					if(this.poolManager.DroneShoots[i].visible)
-						this.poolManager.DroneShoots[i].Draw(this.graphics,deltaTime);
-		
-		for( var i in this.poolManager.LittleEnnemiesShoots)
-			if(this.poolManager.LittleEnnemiesShoots[i] != null)
-				if( this.poolManager.LittleEnnemiesShoots[i].isUsed)
-					this.poolManager.LittleEnnemiesShoots[i].Draw(this.graphics,deltaTime);
-		
 		this.graphics.restore();
 	/*}
 	catch(e)
@@ -363,6 +432,72 @@ Game.prototype.UpdateTime = function()
 		this.Update(deltaTime);
 		this.Draw(deltaTime);
 	}
+}
+
+Game.prototype.StartParty = function()
+{
+	/*var _this = this;
+	$.ajax({
+		url: 'api.php', 
+		type: 'POST',
+		data: 
+		{
+			action: 'starting'
+		},
+		error: function(xhr, msg, msg2)
+		{
+			alert(msg2);
+		},
+		success: function(data)
+		{
+			var result = JSON.parse(data);
+			if(result.error)
+			{
+				alert(result.error);
+			}
+			else
+			{
+				_this.player.inParty = true;
+			}
+		}
+	});*/
+}
+
+Game.prototype.AddGold = function(value)
+{
+	this.gold += value;
+	this.jScore.html(this.gold);
+	/*
+	jQuery.ajax
+	(
+		{
+			url: 'api.php', 
+			type: 'POST',
+			data: 
+			{
+				action: 'goldFound',
+				gold: value
+			},
+			success: function(data)
+			{
+				/*console.log(data);
+				var result = JSON.parse(data);
+				
+				if(result.error)
+				{
+					alert(result.error);
+				}
+				else
+				{
+					console.log("gold validated : " + result.gold);
+				}*//*
+			},
+			error: function(xhr, msg, msg2)
+			{
+				//alert(msg2);
+			}			
+		}
+	);*/
 }
 
 var CheckException = function(text)
@@ -418,6 +553,11 @@ HoriDrone.prototype.Fire = function()
 	}
 }
 
+HoriDrone.prototype.Die = function()
+{
+	GameObject.prototype.Die.call(this);
+}
+
 /**** ../../web-static/src/js/game/Player.js ****/
 var Player = function(game,parent,img,width,height,type,ship)//Need all the things in the DB
 {
@@ -432,28 +572,12 @@ var Player = function(game,parent,img,width,height,type,ship)//Need all the thin
 	this.diag = Math.sqrt(2)/2;
 	this.speed = 400;
 
-	this.drones = new Array();
 
 	this.x = 512;
 	this.y = 300;
 	
-	this.canFire = true;
-	this.timer = 0;
-
-	
 	this.radius = 10;
 	this.radiusSquarred = 100;
-	
-	this.droneRadius = this.radius + 80;
-	this.droneRadiusSquarred = MathUtils.Squarre(this.droneRadius);
-	
-	for(var i = 0; i < 10 ; i++ )
-	{
-		this.children[i] = new RadialDrone(this.game,this,"/spaceext-static/img/thing.png",10,10,this.droneRadius,2*Math.PI/10 * i);
-		this.drones[i] = this.children[i]; 
-	}
-	//this.LengthDrones[0] = new HoriDrone(this.game,"/spaceext-static/img/thing.png",10,10,true,20);
-	//this.LengthDrones[1] = new HoriDrone(this.game,"/spaceext-static/img/thing.png",10,10,false,20);
 	
 	$(document).keyup(function(e){
 		return _this.onKeyUp(e.which);		
@@ -463,6 +587,7 @@ var Player = function(game,parent,img,width,height,type,ship)//Need all the thin
 		return _this.onKeyDown(e.which);
 	});
 	
+	this.inParty = false;
 	
 };
 
@@ -478,13 +603,7 @@ Player.prototype.Update = function(deltaTime)
 		if(this.keyList[32])
 		{
 			this.ship.Fire();
-			
-			for(var i  in this.LengthDrones)	
-				if(this.LengthDrones[i] != null)
-					if(this.LengthDrones[i].canFire)
-						this.LengthDrones[i].Fire();
 		}
-			
 		
 		// Q
 		if(this.keyList[113] || this.keyList[81] || this.keyList[37])
@@ -557,13 +676,6 @@ Player.prototype.Draw = function(graphics, deltaTime)
 	graphics.save();
 	graphics.translate(this.x,this.y);
 	
-	graphics.strokeStyle = "#F00";
-	graphics.strokeCircle(0,0, this.radius);
-	graphics.strokeStyle = "#0F0";
-	graphics.strokeCircle(0,0, this.droneRadius);
-	graphics.strokeStyle = "#00F";
-	graphics.strokeCircle(0,0, this.droneRadius + this.children[0].radius);
-	
 	GameObject.prototype.Draw.call(this,graphics,deltaTime);
 	
 	graphics.restore();
@@ -579,6 +691,10 @@ Player.prototype.onKeyUp = function(k)
 	this.keyList[k] = false;
 	return k != 32 && k != 37 && k != 38 && k != 39 && k != 40;
 };
+Player.prototype.Die = function()
+{
+	GameObject.prototype.Die.call(this);
+}
 
 /**** ../../web-static/src/js/game/Pool/PoolManager.js ****/
 var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
@@ -592,10 +708,13 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 	this.LittleEnnemiesShoots = new Array();
 	this.Ennemies = new Array();
 	
+	this.Collectible = new  Array();
+	this.Collectible[0] = new Array();
+	this.Collectible[1] = new Array();
 	
 	for( var i = 0; i < nbrLittleShip; i++)
 	{
-		this.LittleEnnemies[i] = new Ennemy(this.game,null,IMAGE_URL+"Ennemy.png",21,22);
+		this.LittleEnnemies[i] = new Ennemy(this.game,this.game,IMAGE_URL+"Ennemy.png",21,22);
 	}
 	/*
 	this.GetEnnemy = function(index)
@@ -619,14 +738,14 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 			if(!this.LittleEnnemies[i].isUsed)
 			{
 				//console.log("not used ennemy");
-				this.LittleEnnemies[i].isUsed = true;
+				this.LittleEnnemies[i].ReUse();
 				return this.LittleEnnemies[i];
 			}
 		}
 		
-		this.LittleEnnemies[this.LittleEnnemies.length] = new Ennemy(this.game,null,IMAGE_URL+"Ennemy.png",21,22,EnnemiesIndices.LITTLE);
+		this.LittleEnnemies[this.LittleEnnemies.length] = new Ennemy(this.game,this.game,IMAGE_URL+"Ennemy.png",21,22,EnnemiesIndices.LITTLE);
 		//console.log("created pool entity");
-		this.LittleEnnemies[this.LittleEnnemies.length-1].isUsed = true;
+		this.LittleEnnemies[this.LittleEnnemies.length-1].ReUse();
 		//console.log("Little length : " + this.LittleEnnemies.length);
 		//console.log("pool entity is used");
 		return this.LittleEnnemies[this.LittleEnnemies.length-1]; 
@@ -638,14 +757,15 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 		{
 			if(!this.DroneShoots[i].isUsed)
 			{
-				this.DroneShoots[i].isUsed = true;
-				//console.log("Shot length : " + this.PlayerShoots.length);
+				this.DroneShoots[i].ReUse();
+				//console.log("Shot length : " + this.PlayerShoots.length);*
+				
 				return this.DroneShoots[i];
 			}
 		}
-		this.DroneShoots[this.DroneShoots.length] = new DroneShot(this.game,null,IMAGE_URL+"Thing.png",10,10,1)
+		this.DroneShoots[this.DroneShoots.length] = new DroneShot(this.game,this.game,IMAGE_URL+"Thing.png",10,10,1)
 		//console.log("created pool entity");
-		this.DroneShoots[this.DroneShoots.length-1].isUsed = true;
+		this.DroneShoots[this.DroneShoots.length-1].ReUse();
 		//console.log("pool entity is used");
 		//console.log("Shot legngth : " + this.PlayerShoots.length);
 		return this.DroneShoots[this.DroneShoots.length-1];
@@ -657,7 +777,7 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 		{
 			if(!this.PlayerShoots[i].isUsed)
 			{
-				this.PlayerShoots[i].isUsed= true;
+				this.PlayerShoots[i].ReUse();
 				return this.PlayerShoots[i];
 			}
 		}
@@ -665,7 +785,7 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 		this.PlayerShoots[this.PlayerShoots.length] =
 			new PlayerShot(
 							this.game
-							,null
+							,this.game
 							,""
 							,20
 							,20
@@ -673,7 +793,7 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 							,[0,0]
 							);
 			
-		this.PlayerShoots[this.PlayerShoots.length-1].isUsed = true;
+		this.PlayerShoots[this.PlayerShoots.length-1].ReUse();
 
 		return this.PlayerShoots[this.PlayerShoots.length-1];
 	}
@@ -684,18 +804,39 @@ var PoolManager = function(game,PlayerType,PlayerLevel,nbrLittleShip,nbrShot)
 		{
 			if(!this.LittleEnnemiesShoots[i].isUsed)
 			{
-				this.LittleEnnemiesShoots[i].isUsed = true;
+				this.LittleEnnemiesShoots[i].ReUse();
 				//console.log("Shot legngth : " + this.PlayerShoots.length);
 				return this.LittleEnnemiesShoots[i];
 			}
 		}
 		
-		this.LittleEnnemiesShoots[this.LittleEnnemiesShoots.length] = new EnnemyShot(this.game,null,IMAGE_URL+"Thing.png",10,10);
+		this.LittleEnnemiesShoots[this.LittleEnnemiesShoots.length] = new EnnemyShot(this.game,this.game,IMAGE_URL+"Thing.png",10,10);
 		//console.log("created pool entity");
-		this.LittleEnnemiesShoots[this.LittleEnnemiesShoots.length-1].isUsed = true;
+		this.LittleEnnemiesShoots[this.LittleEnnemiesShoots.length-1].ReUse();
 		//console.log("pool entity is used");
 		//console.log("Shot legngth : " + this.PlayerShoots.length);
 		return this.LittleEnnemiesShoots[this.LittleEnnemiesShoots.length-1];
+	}
+	
+	this.GetCollectible = function()
+	{
+		var r = Math.random();
+		r = Math.round(r);
+		
+		for(var i in this.Collectible[r])
+		{
+			if(!this.Collectible[r][i].isUsed)
+			{
+				this.Collectible[r][i].ReUse();
+				return this.Collectible[r][i];
+			}
+		}
+		var c = new Collectible(this.game,this.game,IMAGE_URL+"ShotSource.png", 10,10,10);
+		this.Collectible[r].push(c);
+		c.ReUse();
+		
+		return c;
+		
 	}
 }
 
@@ -736,6 +877,8 @@ RadialDrone.prototype.Update = function(deltaTime)
 		{
 			this.timerRevive = 0;
 			this.alive = true;
+			this.physical = true;
+			this.visible = true;
 		}
 	}
 
@@ -758,6 +901,12 @@ RadialDrone.prototype.Draw = function(graphics,deltaTime)
 	}
 }
 
+
+RadialDrone.prototype.Die = function()
+{
+	GameObject.prototype.Die.call(this);
+}
+
 /**** ../../web-static/src/js/game/Ship/00-Ship.js ****/
 var Ship = function(game,parent,img,width,height,type,level)//Initialize with the DB
 {
@@ -777,20 +926,40 @@ var Ship = function(game,parent,img,width,height,type,level)//Initialize with th
 		ShootDirection[0] /= d;
 		ShootDirection[1] /= d;
 
-		this.SS[i] = new ShotSource(this.game,this,IMAGE_URL+"ShotSource.png", 10,10,10,1,ShootDirection,[-20+20*i, -30*Math.sin(Math.PI/2 * i)]);
-		this.AddChild(this.SS[i]);
+		this.SS[i*2] = new ShotSource(this.game,this,IMAGE_URL+"ShotSource.png", 10,10,30,1,ShootDirection,[-20+20*i, -30*Math.sin(Math.PI/2 * (i))]);
+		//this.SS[i*2+1] = new ShotSource(this.game,this,IMAGE_URL+"ShotSource.png", 10,10,30,1,ShootDirection,[-20+20*i, -30*Math.sin(Math.PI/2 * (i)) ]);
 	}
 	this.ShootDamage = [0.5*level,1*level,0.5*level];
+
+	this.drones = new Array();
+	
+	this.radius = 10;
+	this.radiusSquarred = 100;
+	this.collectibleRadius = 25;
+	
+	this.droneRadius = this.radius + 50;
+	this.droneRadiusSquarred = MathUtils.Squarre(this.droneRadius);
+	
+	for(var i = 0; i < 10 ; i++ )
+	{
+		this.drones[i] = new RadialDrone(this.game,this,"/spaceext-static/img/thing.png",10,10,this.droneRadius,2*Math.PI/10 * i);
+	}
+	//this.LengthDrones[0] = new HoriDrone(this.game,"/spaceext-static/img/thing.png",10,10,true,20);
+	//this.LengthDrones[1] = new HoriDrone(this.game,"/spaceext-static/img/thing.png",10,10,false,20);
 }
 
 Ship.prototype = new GameObject();
 
 Ship.prototype.Fire = function()
-{	
+{
 	for(i in this.SS)
 	{
 		this.SS[i].Fire();
 	}
+	for(var i in this.LengthDrones)	
+		if(this.LengthDrones[i] != null)
+			if(this.LengthDrones[i].canFire)
+				this.LengthDrones[i].Fire();
 }
 
 Ship.prototype.Update = function (deltaTime)
@@ -804,10 +973,27 @@ Ship.prototype.Draw = function (graphics,deltaTime)
 	graphics.translate(this.x,this.y);
 	
 	graphics.drawImage(this.img,this.offsetX, this.offsetY);
+
+	//* only for debug
+	graphics.strokeStyle = "#F00";
+	graphics.strokeCircle(0,0, this.radius);
+	graphics.strokeStyle = "#FF0";
+	graphics.strokeCircle(0,0, this.collectibleRadius);
+	graphics.strokeStyle = "#0F0";
+	graphics.strokeCircle(0,0, this.droneRadius);
+	graphics.strokeStyle = "#00F";
+	graphics.strokeCircle(0,0, this.droneRadius + this.children[0].radius);
+	//*/
 	
 	GameObject.prototype.Draw.call(this,graphics, deltaTime);
 	
 	graphics.restore();
+}
+
+
+Ship.prototype.Die = function()
+{
+	GameObject.prototype.Die.call(this);
 }
 
 /**** ../../web-static/src/js/game/Ship/Bullet.js ****/
@@ -840,6 +1026,11 @@ Shot.prototype = new GameObject();
 Shot.prototype.Draw = function(graphics,deltaTime)
 {
 	GameObject.prototype.Draw.call(this,graphics, deltaTime);	
+}
+
+Shot.prototype.Die = function()
+{
+	GameObject.prototype.Die.call(this);
 }
 
 /**** ../../web-static/src/js/game/Shot/BulletShot.js ****/
@@ -890,6 +1081,12 @@ BulletShot.prototype.Update = function(deltaTime)
 	this.y += this.direction[1]*deltaTime * 1000;
 }
 
+
+BulletShot.prototype.Die = function()
+{
+	Shot.prototype.Die.call(this);
+}
+
 /**** ../../web-static/src/js/game/Shot/DroneShot.js ****/
 var DroneShot = function (game,parent,img,width,height,damage)
 {
@@ -915,15 +1112,16 @@ DroneShot.prototype.Update = function(deltaTime)
 				
 				if(distance <= pool.DroneShoots[i].radiusSquarred + pool.LittleEnnemies[e].radiusSquarred)
 				{
-					pool.LittleEnnemies[e].isUsed = false;
-					pool.DroneShoots[i].isUsed = false;							
+					pool.LittleEnnemies[e].Die();
+					pool.DroneShoots[i].Die();
+					return;
 				}
 			}
 		}
 	}
 	
 	if(this.y <= 0 )
-		this.isUsed = false;
+		this.Die();
 }
 
 DroneShot.prototype.Draw = function(graphics,deltaTime)
@@ -932,12 +1130,17 @@ DroneShot.prototype.Draw = function(graphics,deltaTime)
 	Shot.prototype.Draw.call(this,graphics,deltaTime);
 }
 
+DroneShot.prototype.Die = function()
+{
+	Shot.prototype.Die.call(this);
+}
+
 /**** ../../web-static/src/js/game/Shot/EnnemyShot.js ****/
 var EnnemyShot = function(game,parent,img,width,height,damage)
 {
 	Shot.call(this,game,parent,img,width,height,damage);
 	
-	this.speed = 200;
+	this.speed = 90;
 	
 	this.gradient = document.createElement('canvas');
 	this.gradient.style.background = 'transparent';
@@ -991,33 +1194,39 @@ EnnemyShot.prototype.Update = function(deltaTime)
 			var distance = MathUtils.SquarredDistance(playX,this.x, playY ,this.y);
 		
 			//Test for all drones
-			for(var e in this.game.player.drones)
+			for(var e in this.game.player.ship.drones)
 			{
-				var drone = this.game.player.drones[e];
-				
-				if(distance <= this.game.player.radiusSquarred + this.game.player.droneRadiusSquarred + drone.radiusSquarred)
+				var drone = this.game.player.ship.drones[e];
+				if(drone.physical)
 				{
-					var distanceD = MathUtils.SquarredDistance(drone.x+playX,this.x,drone.y+playY,this.y);
-					
-					if(distanceD <= this.radiusSquarred + drone.radiusSquarred)
+					if(distance <= this.game.player.radiusSquarred + this.game.player.ship.droneRadiusSquarred + drone.radiusSquarred)
 					{
-						this.isUsed = false;
-						drone.alive = false;
+						var distanceD = MathUtils.SquarredDistance(drone.x+playX,this.x,drone.y+playY,this.y);
+						
+						if(distanceD <= this.radiusSquarred + drone.radiusSquarred)
+						{
+							this.Die();
+							drone.physical = false;
+							drone.visible = false;
+							drone.alive = false;
+							return;
+						}
 					}
 				}
 				if(distance <= this.radiusSquarred + this.game.player.radiusSquarred)
 				{
-					this.game.player.exists = false;
-					this.game.player.visible = false;
-					this.game.player.physical = false;
-					this.isUsed = false;
+					this.Die();
+					
+					this.game.player.Die();
+					return;
 				}
 			}
 		}
 		
 		this.x += this.direction[0]*deltaTime * this.speed;
 		this.y += this.direction[1]*deltaTime * this.speed;
-		
+		if(this.y <= 0 || this.y >= this.game.canvas.height || this.x <= 0 || this.x >= this.game.canvas.width)
+			this.Die();
 		Shot.prototype.Update.call(this,deltaTime);
 	}
 	
@@ -1037,6 +1246,11 @@ EnnemyShot.prototype.Draw = function(graphics,deltaTime)
 	graphics.drawImage(this.gradient,0,0);
 	
 	graphics.restore();
+}
+
+EnnemyShot.prototype.Die = function()
+{
+	Shot.prototype.Die.call(this);
 }
 
 /**** ../../web-static/src/js/game/Shot/PlayerShot.js ****/
@@ -1062,10 +1276,11 @@ PlayerShot.prototype.Update = function(deltaTime)
 			{
 				var distance = MathUtils.SquarredDistance(pool.LittleEnnemies[e].x, this.x, pool.LittleEnnemies[e].y, this.y);
 				
-				if(distance <= this.radiusSquarred + pool.LittleEnnemies[e].radiusSquarred)
+				if(distance <= MathUtils.Squarre(this.radius + pool.LittleEnnemies[e].radius))
 				{
 					pool.LittleEnnemies[e].Attacked(this.damage);
-					this.isUsed = false;							
+					this.Die();
+					return;
 				}
 			}
 		}
@@ -1074,7 +1289,7 @@ PlayerShot.prototype.Update = function(deltaTime)
 		this.y += this.direction[1] * this.speed * deltaTime;
 
 		if(this.y <= 0 )
-			this.isUsed = false;
+			this.Die();
 	}	
 }
 
@@ -1089,6 +1304,11 @@ PlayerShot.prototype.Draw = function(graphics,deltaTime)
 	Shot.prototype.Draw.call(this, graphics,deltaTime);
 	
 	graphics.restore();
+}
+
+PlayerShot.prototype.Die = function()
+{
+	Shot.prototype.Die.call(this);
 }
 
 // laser
@@ -1146,6 +1366,8 @@ function testLaser(){
     context.closePath();
     context.fill();
 }
+
+
 
 /**** ../../web-static/src/js/game/ShotSources/ShotSource.js ****/
 var ShotSource = function(game,parent,img,width,height,fireRate,damage,direction,position)
@@ -1284,7 +1506,6 @@ EnnemiesIndices =
 
 function start()
 {
-	console.log('creating game');
 	game = new Game();
 }
 

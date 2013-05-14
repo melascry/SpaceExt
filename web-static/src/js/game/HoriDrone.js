@@ -44,3 +44,8 @@ HoriDrone.prototype.Fire = function()
 		c.y = this.y + this.game.player.y;
 	}
 }
+
+HoriDrone.prototype.Die = function()
+{
+	GameObject.prototype.Die.call(this);
+}

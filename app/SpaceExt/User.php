@@ -4,79 +4,46 @@ namespace SpaceExt;
 class User{
 	
 	private $fbId;
+	private $gold;
 	
 	public $publicData = "ok";
 	
-	private function __construct($fbId){
+	private function __construct($fbId,$gold){
 		$this->fbId = $fbId;
+		$this->gold = $gold;
 	}
 	
 	public function toJSON(){
 		return json_encode(array(
-			'fbId' => $this->fbId
+			'fbId' => $this->fbId,
+			'gold' => $this->gold
 		));
 	}
-	/*
-	public function addXP($xpToAdd){
-		$query = App::getDB()->prepare('UPDATE user SET xp=xp+? WHERE id=?');
-		if($query->execute(array($xpToAdd, $this->id))){
-			$query = App::getDB()->prepare('SELECT xp FROM user WHERE id=? LIMIT 1');
-			if($query->execute(array($this->id))){
+	
+	public function addGold($goldToAdd){
+		
+		/* put here the code to know if you can add the gold obtained */
+		
+		$sum = $this->gold + $goldToAdd;
+		
+		$query = App::getDB()->prepare('UPDATE user SET gold=? WHERE idfb=?');
+		if($query->execute(array($sum, $this->fbId )))
+		{
+			$query = App::getDB()->prepare('SELECT gold FROM user WHERE idfb=? LIMIT 1');
+			if($query->execute(array($this->fbId)))
+			{
 				$res = $query->fetch();
-				if($res){
-					$this->xp = $res->xp;
+				if($res)
+				{
+					$this->gold = $res->gold;
 				}
 			}
 		}	
 	}
 	
-	public function getXP(){
-		return $this->xp;
+	public function getGold(){
+		return $this->gold;
 	}
-	*/
-	/*
-	public static function login($login, $password){
-		$query = App::getDB()->prepare('SELECT * FROM user WHERE login=? LIMIT 1');
-		if($query->execute(array($login))){
-			$res = $query->fetch();
-			if($res){
-				if(\PasswordHashUtils::validate_password($password, $res->hash)){
-					$_SESSION['user'] = new User($res->id, $res->login, $res->xp, $res->hp, $res->power);
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-	*/
-	/**
-	 * Test
-	 * @param unknown $login
-	 * @param unknown $password
-	 */
-	/*
-	public static function register($login, $password){
-		if(strlen($password) < 5){
-			throw new \Exception('Password too short (3 char min)');
-		}
-		$query = App::getDB()->prepare('SELECT id FROM user WHERE login=? LIMIT 1');
-		if($query->execute(array($login))){
-			$res = $query->fetch();
-			if($res){
-				throw new \Exception('Login already exists');
-			}else{
-				$query = App::getDB()->prepare('INSERT INTO user (login,hash) VALUES (?,?)');
-				if($query->execute(array($login, \PasswordHashUtils::create_hash($password)))){
-					if(!self::login($login, $password)){
-						throw new \Exception('Registration failed');
-					}
-				}
-			}
-			return true;
-		}
-		return false;
-	}
-	*/
 
 	public static function fbLogin($fbId){
 		$query = App::getDB()->prepare('SELECT * FROM user WHERE idfb=?');
@@ -84,23 +51,21 @@ class User{
 		if($query->execute( array($fbId) ))
 		{
 			$res = $query->fetch();
-			//echo ' fetching ';
-			//Utils::debug($res);
 			if($res)
 			{
-				$_SESSION['indexUser'] = new User($res->idfb);
+				$_SESSION['user'] = new user($res->idfb,$res->gold);
+				echo $_SESSION['user']->addGold(12);
 			}
 		}
-		if(!isset($_SESSION['indexUser']))
+		if(!isset($_SESSION['user']))
 		{
-			echo ' user not set ';
 			$userProfile = App::getFbApi()->api('/me');
 			
-			$query = App::getDB()->prepare('INSERT INTO user (idfb) VALUES (?)');
-			//echo $query;
-			if($query->execute(array($fbId)))
+			$query = App::getDB()->prepare('INSERT INTO user (idfb,gold) VALUES (?,0)');
+			
+			if($query->execute(array($this->fbId)))
 			{
-				return self::fbLogin($fbId);
+				return self::fbLogin($this->fbId);
 			}else
 			{
 				return false;
@@ -108,7 +73,6 @@ class User{
 		}
 		else
 		{
-			echo ' user created ';
 			return true;
 		}
 	}

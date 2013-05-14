@@ -1,5 +1,7 @@
 var Game = function()
 {
+	GameObject.call(this,this,null,"",0,0);
+	
 	var _this = this;
 		
 	requestAnimFrame(
@@ -14,13 +16,13 @@ var Game = function()
 	this.canvas = document.getElementById("canvas");
 	this.graphics = canvas.getContext("2d");
 	
+	this.jScore = $('#score');
+	
 	this.poolManager = new PoolManager(this,1,1);
 
-	this.player = new Player(this,null,IMAGE_URL+"ShooterSDLittle.png",50,47,1,null);
+	this.player = new Player(this,this,IMAGE_URL+"ShooterSDLittle.png",50,47,1,null);
 	var playerShip = new Ship(this,this.player,IMAGE_URL+"ShooterSDLittle.png",50,47,1,1);
 	this.player.ship = playerShip;
-	this.player.AddChild(playerShip);
-	
 	
 	this.graphics.Check = function()
 	{
@@ -49,11 +51,22 @@ var Game = function()
 	this.timer = 0;
 
 	this.pause = false;
+	
+	this.gold = 0;
+	this.cristal = 0;
+	
+
+	// Set the user past data in the game;
+	this.gold = Math.round(userData.gold);
+	this.jScore.html(this.gold);
+	//////////////////////////////////////
 
 	$(document).keydown(function(e){
 		return _this.onKeyDown(e.which);
 	});
 }
+
+Game.prototype = new GameObject();
 
 Game.prototype.onKeyDown = function(e)
 {
@@ -71,43 +84,10 @@ Game.prototype.Update = function(deltaTime)
 		ennemy.PopInWorld();
 	}
 	
-	/*var test = new Array();
-	for(var i in this.poolManager.PlayerShoots)
-		test[i] = this.poolManager.PlayerShoots[i].length;*/
-	if(this.player != null && this.player.exists)
-		this.player.Update(deltaTime);
-	/*for(var i in test)
-	{
-		if(test[i] != this.poolManager.PlayerShoots[i].length)
-			console.log("different :O");
-	}*/
-	
-	for ( var i in this.poolManager.LittleEnnemies)
-		if(this.poolManager.LittleEnnemies[i] != null)
-			if( this.poolManager.LittleEnnemies[i].isUsed)
-				if(this.poolManager.LittleEnnemies[i].exists)
-					this.poolManager.LittleEnnemies[i].Update(deltaTime);
-	
-	for(var i in this.poolManager.PlayerShoots)
-		if(this.poolManager.PlayerShoots[i] != null)
-				if(this.poolManager.PlayerShoots[i].isUsed)
-					if(this.poolManager.PlayerShoots[i].exists)
-						this.poolManager.PlayerShoots[i].Update(deltaTime);
-
-	for(var i in this.poolManager.DroneShoots)
-		if(this.poolManager.DroneShoots[i] != null)
-			if( this.poolManager.DroneShoots[i].isUsed)
-				if(this.poolManager.DroneShoots[i].exists)
-					this.poolManager.DroneShoots[i].Update(deltaTime);
-	
-	for( var i in this.poolManager.LittleEnnemiesShoots)
-		if(this.poolManager.LittleEnnemiesShoots[i] != null)
-			if( this.poolManager.LittleEnnemiesShoots[i].isUsed)
-				if(this.poolManager.LittleEnnemiesShoots[i].exists)
-					this.poolManager.LittleEnnemiesShoots[i].Update(deltaTime);
+	GameObject.prototype.Update.call(this,deltaTime);	
 }
 
-Game.prototype.Draw = function(deltaTime)
+Game.prototype.Draw = function(graphics,deltaTime)
 {
 	this.graphics.drawTime = Date.now();
 	//try
@@ -115,35 +95,9 @@ Game.prototype.Draw = function(deltaTime)
 		this.graphics.save();
 		this.graphics.fillStyle = 'black';
 		this.graphics.fillRect(0,0,this.canvas.width,this.canvas.height);
+		
+		GameObject.prototype.Draw.call(this,this.graphics, deltaTime);
 	
-		if(this.player.visible)
-			this.player.Draw(this.graphics,deltaTime);
-		
-		//DrawEnnemies
-		for ( var i in this.poolManager.LittleEnnemies)
-			if(this.poolManager.LittleEnnemies[i] != null)
-				if( this.poolManager.LittleEnnemies[i].isUsed)
-					if(this.poolManager.LittleEnnemies[i].visible)
-						this.poolManager.LittleEnnemies[i].Draw(this.graphics,deltaTime);
-
-		//DrawMissiles
-		for(var i in this.poolManager.PlayerShoots)
-			if(this.poolManager.PlayerShoots[i] != null)
-					if( this.poolManager.PlayerShoots[i].isUsed)
-						if(this.poolManager.PlayerShoots[i].visible)
-							this.poolManager.PlayerShoots[i].Draw(this.graphics,deltaTime);
-
-		for(var i in this.poolManager.DroneShoots)
-			if(this.poolManager.DroneShoots[i] != null)
-				if( this.poolManager.DroneShoots[i].isUsed)
-					if(this.poolManager.DroneShoots[i].visible)
-						this.poolManager.DroneShoots[i].Draw(this.graphics,deltaTime);
-		
-		for( var i in this.poolManager.LittleEnnemiesShoots)
-			if(this.poolManager.LittleEnnemiesShoots[i] != null)
-				if( this.poolManager.LittleEnnemiesShoots[i].isUsed)
-					this.poolManager.LittleEnnemiesShoots[i].Draw(this.graphics,deltaTime);
-		
 		this.graphics.restore();
 	/*}
 	catch(e)
@@ -163,6 +117,72 @@ Game.prototype.UpdateTime = function()
 		this.Update(deltaTime);
 		this.Draw(deltaTime);
 	}
+}
+
+Game.prototype.StartParty = function()
+{
+	/*var _this = this;
+	$.ajax({
+		url: 'api.php', 
+		type: 'POST',
+		data: 
+		{
+			action: 'starting'
+		},
+		error: function(xhr, msg, msg2)
+		{
+			alert(msg2);
+		},
+		success: function(data)
+		{
+			var result = JSON.parse(data);
+			if(result.error)
+			{
+				alert(result.error);
+			}
+			else
+			{
+				_this.player.inParty = true;
+			}
+		}
+	});*/
+}
+
+Game.prototype.AddGold = function(value)
+{
+	this.gold += value;
+	this.jScore.html(this.gold);
+	/*
+	jQuery.ajax
+	(
+		{
+			url: 'api.php', 
+			type: 'POST',
+			data: 
+			{
+				action: 'goldFound',
+				gold: value
+			},
+			success: function(data)
+			{
+				/*console.log(data);
+				var result = JSON.parse(data);
+				
+				if(result.error)
+				{
+					alert(result.error);
+				}
+				else
+				{
+					console.log("gold validated : " + result.gold);
+				}*//*
+			},
+			error: function(xhr, msg, msg2)
+			{
+				//alert(msg2);
+			}			
+		}
+	);*/
 }
 
 var CheckException = function(text)

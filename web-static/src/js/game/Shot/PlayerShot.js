@@ -20,10 +20,11 @@ PlayerShot.prototype.Update = function(deltaTime)
 			{
 				var distance = MathUtils.SquarredDistance(pool.LittleEnnemies[e].x, this.x, pool.LittleEnnemies[e].y, this.y);
 				
-				if(distance <= this.radiusSquarred + pool.LittleEnnemies[e].radiusSquarred)
+				if(distance <= MathUtils.Squarre(this.radius + pool.LittleEnnemies[e].radius))
 				{
 					pool.LittleEnnemies[e].Attacked(this.damage);
-					this.isUsed = false;							
+					this.Die();
+					return;
 				}
 			}
 		}
@@ -32,7 +33,7 @@ PlayerShot.prototype.Update = function(deltaTime)
 		this.y += this.direction[1] * this.speed * deltaTime;
 
 		if(this.y <= 0 )
-			this.isUsed = false;
+			this.Die();
 	}	
 }
 
@@ -47,6 +48,11 @@ PlayerShot.prototype.Draw = function(graphics,deltaTime)
 	Shot.prototype.Draw.call(this, graphics,deltaTime);
 	
 	graphics.restore();
+}
+
+PlayerShot.prototype.Die = function()
+{
+	Shot.prototype.Die.call(this);
 }
 
 // laser
@@ -104,3 +110,4 @@ function testLaser(){
     context.closePath();
     context.fill();
 }
+

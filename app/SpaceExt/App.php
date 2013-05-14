@@ -1,8 +1,8 @@
 <?php
 namespace SpaceExt;
 
-require_once 'User.php';
-require_once 'Utils.php';
+/*require_once 'User.php';
+require_once 'Utils.php';*/
 //require_once('../app/config/10-path.php');
 
 use Facebook;
@@ -54,6 +54,7 @@ class App{
 					include '../app/templates/index.tpl';
 				
 				die();
+				//header('Location: index.php');
 			}
 			//die('you\'r on facebook : '. $userId);
 		}

@@ -22,19 +22,25 @@ DroneShot.prototype.Update = function(deltaTime)
 				
 				if(distance <= pool.DroneShoots[i].radiusSquarred + pool.LittleEnnemies[e].radiusSquarred)
 				{
-					pool.LittleEnnemies[e].isUsed = false;
-					pool.DroneShoots[i].isUsed = false;							
+					pool.LittleEnnemies[e].Die();
+					pool.DroneShoots[i].Die();
+					return;
 				}
 			}
 		}
 	}
 	
 	if(this.y <= 0 )
-		this.isUsed = false;
+		this.Die();
 }
 
 DroneShot.prototype.Draw = function(graphics,deltaTime)
 {
 	graphics.drawImage(this.img,this.x,this.y);
 	Shot.prototype.Draw.call(this,graphics,deltaTime);
+}
+
+DroneShot.prototype.Die = function()
+{
+	Shot.prototype.Die.call(this);
 }

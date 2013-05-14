@@ -2,7 +2,7 @@ var EnnemyShot = function(game,parent,img,width,height,damage)
 {
 	Shot.call(this,game,parent,img,width,height,damage);
 	
-	this.speed = 200;
+	this.speed = 90;
 	
 	this.gradient = document.createElement('canvas');
 	this.gradient.style.background = 'transparent';
@@ -56,33 +56,39 @@ EnnemyShot.prototype.Update = function(deltaTime)
 			var distance = MathUtils.SquarredDistance(playX,this.x, playY ,this.y);
 		
 			//Test for all drones
-			for(var e in this.game.player.drones)
+			for(var e in this.game.player.ship.drones)
 			{
-				var drone = this.game.player.drones[e];
-				
-				if(distance <= this.game.player.radiusSquarred + this.game.player.droneRadiusSquarred + drone.radiusSquarred)
+				var drone = this.game.player.ship.drones[e];
+				if(drone.physical)
 				{
-					var distanceD = MathUtils.SquarredDistance(drone.x+playX,this.x,drone.y+playY,this.y);
-					
-					if(distanceD <= this.radiusSquarred + drone.radiusSquarred)
+					if(distance <= this.game.player.radiusSquarred + this.game.player.ship.droneRadiusSquarred + drone.radiusSquarred)
 					{
-						this.isUsed = false;
-						drone.alive = false;
+						var distanceD = MathUtils.SquarredDistance(drone.x+playX,this.x,drone.y+playY,this.y);
+						
+						if(distanceD <= this.radiusSquarred + drone.radiusSquarred)
+						{
+							this.Die();
+							drone.physical = false;
+							drone.visible = false;
+							drone.alive = false;
+							return;
+						}
 					}
 				}
 				if(distance <= this.radiusSquarred + this.game.player.radiusSquarred)
 				{
-					this.game.player.exists = false;
-					this.game.player.visible = false;
-					this.game.player.physical = false;
-					this.isUsed = false;
+					this.Die();
+					
+					this.game.player.Die();
+					return;
 				}
 			}
 		}
 		
 		this.x += this.direction[0]*deltaTime * this.speed;
 		this.y += this.direction[1]*deltaTime * this.speed;
-		
+		if(this.y <= 0 || this.y >= this.game.canvas.height || this.x <= 0 || this.x >= this.game.canvas.width)
+			this.Die();
 		Shot.prototype.Update.call(this,deltaTime);
 	}
 	
@@ -102,4 +108,9 @@ EnnemyShot.prototype.Draw = function(graphics,deltaTime)
 	graphics.drawImage(this.gradient,0,0);
 	
 	graphics.restore();
+}
+
+EnnemyShot.prototype.Die = function()
+{
+	Shot.prototype.Die.call(this);
 }
